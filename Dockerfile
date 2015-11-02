@@ -8,7 +8,7 @@ RUN     yum install -y npm
 
 COPY . /spudz
 
-RUN cd /src; npm install
+RUN cd /spudz; npm install
 
 EXPOSE  8001
 
