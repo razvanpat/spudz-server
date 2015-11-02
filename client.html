@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8" />
+
+<title>WebSocket Test</title>
+
+<script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:8001/";
+  var output;
+
+  function init()
+  {
+    output = document.getElementById("output");
+    testWebSocket();
+  }
+
+  function testWebSocket()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+    doSendObj({
+      name: 'register_name',
+      param: document.getElementById('name').value
+    });
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+    writeToScreen('<div style="color: blue;">RESPONSE: ' + evt.data+'</div>');
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    writeToScreen("SENT: " + message); 
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+    var pre = document.createElement("div");
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  function disconnect() {
+    websocket.close();
+  }
+
+  function doSendObj(obj) {
+    doSend(JSON.stringify(obj));
+  }
+
+  function sendMove() {
+    var msg = document.getElementById('moveData').value;
+    console.log(msg);
+    doSendObj({
+      name: 'move',
+      param: msg
+    });
+  }
+
+  function findMatch() {
+    doSendObj({
+      name: 'find_match',
+      param: {}
+    });
+  }
+
+
+</script>
+
+
+<h2>WebSocket Test</h2>
+
+<div>
+  <input id='name' type='text' value='Player Name' />
+  <input type='button' value='Connect' onclick="init()" />
+</div>
+<div>
+  <textarea id='moveData' cols='40' rows='8'></textarea>
+</div> 
+<div>
+  <input type="button" value="Find match" onclick="findMatch()" />
+  <input type="button" value="Send move" onclick="sendMove()" />
+  <input type="button" value="Disconnect" onclick="disconnect()" />
+</div>
+
+<hr/>
+
+<div id="output" style="font-size: 10px; font-family: mono"></div>

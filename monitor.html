@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<meta charset="utf-8" />
+
+<title>WebSocket Test</title>
+
+<script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:8001/";
+  var output;
+
+  function init()
+  {
+    output = document.getElementById("output");
+    testWebSocket();
+  }
+
+  function testWebSocket()
+  {
+    websocket = new WebSocket(wsUri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+  }
+
+  function onOpen(evt)
+  {
+    writeToScreen("CONNECTED");
+    doSendObj({
+      name: 'register_name',
+      param: '$monitoring'
+    });
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+  }
+
+  function onMessage(evt)
+  {
+    //writeToScreen('<div style="color: blue;">RESPONSE: ' + evt.data+'</div>');
+    if(!evt.data || evt.data[0] != '{') return;
+
+    var msg = JSON.parse(evt.data);
+    if(msg.name === 'monitoring_data') {
+      document.getElementById('pcount').innerHTML = msg.playerCount;
+      document.getElementById('mmcount').innerHTML = msg.matchmaked;
+      document.getElementById('mqsize').innerHTML = msg.matchmakingQueue.length;
+
+      var i;
+      var playersOpt = '';
+      playersOpt += '<ul>';
+      for(i=0; i<msg.players.length; i++) {
+        playersOpt += '<li>' + msg.players[i] + '</li>';
+      }
+      playersOpt += '</ul>';
+
+      var mmqueueOpt = '';
+      mmqueueOpt += '<ul>';
+      for(i=0; i<msg.matchmakingQueue.length; i++) {
+        mmqueueOpt += '<li>' + msg.matchmakingQueue[i] + '</li>';
+      }
+      mmqueueOpt += '</ul>';
+
+      document.getElementById('players').innerHTML = playersOpt;
+      document.getElementById('mmqueue').innerHTML = mmqueueOpt;
+    }
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    //writeToScreen("SENT: " + message); 
+    websocket.send(message);
+  }
+
+  function writeToScreen(message)
+  {
+    var pre = document.createElement("div");
+    pre.innerHTML = message;
+    output.appendChild(pre);
+  }
+
+  function disconnect() {
+    websocket.close();
+  }
+
+  function doSendObj(obj) {
+    doSend(JSON.stringify(obj));
+  }
+
+
+
+</script>
+
+
+<h2>Game Monitoring</h2>
+
+<div>
+  <input type='button' value='Connect' onclick="init()" />
+  <input type="button" value="Disconnect" onclick="disconnect()" />
+</div>
+<div>
+  <table style="text-align: right; margin-top: 20px">
+
+    <tr>
+      <th style="padding-right: 10px;">
+        Player count
+      </th>
+      <td id='pcount'>
+      0
+      </td>
+    </tr>
+
+    <tr>
+      <th style="padding-right: 10px;">
+        Matchmaked count
+      </th>
+      <td id='mmcount'>
+      0
+      </td>
+    </tr>
+
+    <tr>
+      <th style="padding-right: 10px;">
+        Matchmaking queue size
+      </th>
+      <td id='mqsize'>
+      0
+      </td>
+    </tr> 
+      
+
+  </table>
+
+  <hr/>
+
+  <div>
+    <strong>Player online:</strong>
+  </div>
+  <div id='players'></div>
+
+  <hr/>
+
+  <div>
+    <strong>Waiting for matchmaking:</strong>
+  </div>
+  <div id='mmqueue'></div>
+
+
+<hr/>
+
+<div id="output" style="font-size: 10px; font-family: mono"></div>
