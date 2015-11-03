@@ -31,4 +31,8 @@ Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker, Disc
 
 	}).listen(8001)
 
+	process.on('uncaughtException', function (err) {
+	  console.log('Caught exception: ' + err);
+	});
+
 });
