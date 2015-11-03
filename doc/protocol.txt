@@ -1,0 +1,49 @@
+Protocol
+
+<< - client to server
+>> - server to client
+
+// Opening sequence
+<< Open game (connect la websocket)
+<< Send credentials
+		"credentials"
+		- id:String
+		- nickname:String
+		
+//Matchmaking	
+<< "find_match" 
+		"find_match"
+>> "match_found" 
+		"match_found"
+		- firstplayer: "playerID"
+		
+//Select characters		
+<< "select character"
+		- character_id: x
+>> "opponent_character"
+		- character_id: x
+>> "start_match"
+
+//P1 makes a move
+<< "move"
+		- action: ....
+		- state {
+				P1:{ 
+					position: {x,y}
+					health:z
+				}
+			}
+			
+//P2 responds to opponent move
+>> "move"
+		- ...
+<< "reconciliation"
+		- state {.....}
+
+//P2 makes a move		
+<< "move"
+		- ...
+		
+//Win
+>> "win"
+		- player_id:x
