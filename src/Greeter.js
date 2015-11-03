@@ -8,17 +8,28 @@ Autowire(function(Dispatcher, StatsTracker) {
 
 	Greeter.prototype.onNewConnection = function(arg) {
 		var conn = arg.connection;
+		conn.sendEvent = function(name, param, player) {
+			var evt = {
+				name: name,
+				param: param
+			};
+			if(player !== undefined) {
+				evt.player = player
+			}
+			conn.sendText(JSON.stringify(evt));
+		}
 		conn.spudzData = {};
-		conn.sendText('Greetings');
+		conn.sendEvent('welcome');
 	}
 
 	Greeter.prototype.onPlayerName = function(arg) {
 		var conn = arg.connection;
 		if(StatsTracker.isPlayerNameAvailable(arg.param)) {
 			conn.spudzData.player = arg.param;
-			conn.sendText('Registered player name \''+arg.param+'\'');
+
+			conn.sendEvent('player_registered');
 		} else {
-			conn.sendText('Player name is already taken. Bye bye!');
+			conn.sendEvent('error', 'Another player with the same id is already connected');
 			conn.close('900', 'Player name already taken');
 		}
 	}

@@ -7,10 +7,8 @@ Autowire(function(Dispatcher) {
 
 	MoveRelay.prototype.onMove = function(arg) {
 		var conn = arg.connection;
-		if(conn.spudzData.opponent === undefined) {
-			conn.sendText('You don\'t have an opponent, your move command has disappeared into the void');
-		} else {
-			conn.spudzData.opponent.sendText('Your opponent made a move: ' + arg.param);
+		if(conn.spudzData.opponent !== undefined) {
+			conn.spudzData.opponent.sendEvent('move', arg.param, conn.spudzData.player);
 		}
 	}
 

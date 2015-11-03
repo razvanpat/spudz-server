@@ -9,19 +9,35 @@ Protocol
 Connection will be made by MEAN stack and passed along to the game
 
 << Open game (connect la websocket)
+>> "welcome"
+
 << Send credentials
 		"credentials"
 		- id:String
 		- nickname:String
-		
+>> "player_registered"
+// OR		
+>> "error" {message: "Player already connected"}
+
 
 //Matchmaking	
 << "find_match" 
 		"find_match"
+
+// if match found
+//    firstPlayer: if true it's this players turn to move
 >> "match_found" 
-		"match_found"
-		- firstplayer: "playerID"
-		
+		{
+			opponentId: xx,
+			firstPlayer: true / false
+		}
+
+// if player is already in mm queue (normally this shuould not happen, but just in case)
+>> "already_in_mm"
+
+// if waiting for opponent to be found
+>> "searching_match"
+
 
 *********** Game client ************
 
@@ -53,14 +69,19 @@ Connection will be made by MEAN stack and passed along to the game
 			}
 			
 //P2 responds to opponent move
+// besides the move and param it will contain a property 'player', witht the player id making the move (useful for spectate & replay)
 >> "move"
-		- ...
+	....
+
+// !!!!!!!!! TODO serverside !!!!!!!!
 << "reconciliation"
 		- state {.....}
 
+
 //P2 makes a move		
 << "move"
-		- ...
+	....
+
 		
 //Win (player_id of the winner)
 >> "win"

@@ -8,7 +8,7 @@ Autowire(function(Dispatcher) {
 	DisconnectR.prototype.onDisconnect = function(arg) {
 		var opp = arg.connection.spudzData.opponent;
 		if(opp) {
-			opp.sendText("Your opponent has disconnected!");
+			opp.sendEvent("opponent_disconnected");
 			delete opp.spudzData.opponent;
 		}
 	}

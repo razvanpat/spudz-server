@@ -5,13 +5,20 @@ Autowire(function(_, Dispatcher, Utils) {
 
 	function matchmake(conn1, conn2) {
 
-		console.log('Matchmaking ' + conn1.spudzData.player + ' with ' + conn2.spudzData.player);
-
 		conn1.spudzData.opponent = conn2;
 		conn2.spudzData.opponent = conn1;
 
-		conn1.sendText('You are now matchmaked with ' + conn2.spudzData.player);
-		conn2.sendText('You are now matchmaked with ' + conn1.spudzData.player);
+		var first = Math.random()<.5;
+
+		conn1.sendEvent('match_found', {
+			opponentId: conn2.spudzData.player,
+			firstPlayer: first
+		});
+
+		conn2.sendEvent('match_found', {
+			opponentId: conn1.spudzData.player,
+			firstPlayer: !first
+		});
 	}
 
 	function playerAlreadyInQueue(conn) {
@@ -36,21 +43,18 @@ Autowire(function(_, Dispatcher, Utils) {
 
 	Matchmaker.prototype.onFindMatch = function(arg) {
 		var conn = arg.connection;
-		console.log(conn.spudzData.player + ' is looking for a game');
-	
+		
 		clearDisconnected();
 		if(playerAlreadyInQueue(conn)) {
-			conn.sendText('You are already registered for matchmaking');
+			conn.sendEvent('already_in_mm');
 			return;
 		}
 
 		if(waiting.length > 0) {
-			console.log(conn.spudzData.player + ' has a match');
 			matchmake(waiting[0], conn);
 			waiting.shift();
 		} else {
-			console.log(conn.spudzData.player + ' is put in a queue');
-			conn.sendText('Searching for a match');
+			conn.sendEvent('searching_for_match');
 			waiting.push(conn);
 		}
 	}
