@@ -3,13 +3,18 @@ Protocol
 << - client to server
 >> - server to client
 
+*********** MEAN Stack ************
+
 // Opening sequence
+Connection will be made by MEAN stack and passed along to the game
+
 << Open game (connect la websocket)
 << Send credentials
 		"credentials"
 		- id:String
 		- nickname:String
 		
+
 //Matchmaking	
 << "find_match" 
 		"find_match"
@@ -17,12 +22,25 @@ Protocol
 		"match_found"
 		- firstplayer: "playerID"
 		
+
+*********** Game client ************
+
+
 //Select characters		
+
 << "select character"
-		- character_id: x
+	{
+		character_id: x
+	}
+
+
 >> "opponent_character"
-		- character_id: x
+	{
+		character_id: x
+	}
+
 >> "start_match"
+
 
 //P1 makes a move
 << "move"
@@ -44,6 +62,25 @@ Protocol
 << "move"
 		- ...
 		
-//Win
+//Win (player_id of the winner)
 >> "win"
 		- player_id:x
+
+
+// opponent disconnected, you win
+>> "opponent_disconnected"
+
+// your move time has expired, it's your opponent's turn to move
+>> "move_time_expired"
+
+// you skip your round
+<< "move_skip"
+
+// your opponent skipped the round, it's your turn
+>> "opponent_skip"
+
+// your receive an error message from the server
+>> "error"
+	{
+		message: "Lorem ipsum"
+	}
