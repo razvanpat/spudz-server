@@ -35,6 +35,10 @@ Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker, Disc
 	  		player = conn.spudzData.player
 	  	}
 	  	console.log('ERROR for player ' + player, errorObj);
+	  	Dispatcher.broadcast('connection_error', {
+	    	connection: conn,
+	    	errorObj: errorObj
+	    });
 	  });
 
 	}).listen(8001)

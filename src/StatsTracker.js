@@ -48,6 +48,8 @@ Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 		Dispatcher.register('connection_closed', this, this.onDisconnect);
 		Dispatcher.register('register_name', this, this.onPlayerName);
 		Dispatcher.register('move', this, this.incrementMoveCounter);
+		Dispatcher.register('connection_error', this, this.onConnectionError);
+
 
 		setInterval(function() {
 			updateStats();
@@ -72,6 +74,11 @@ Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 
 	StatsTracker.prototype.incrementMoveCounter = function() {
 		moveCounter ++;
+	}
+
+	StatsTracker.prototype.onConnectionError = function(arg) {
+		activeConnections = Utils.removeConnection(activeConnections, arg.connection);
+		monitoringConnections = Utils.removeConnection(monitoringConnections, arg.connection);
 	}
 
 	StatsTracker.prototype.isPlayerNameAvailable = function(name) {

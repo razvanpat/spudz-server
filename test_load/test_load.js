@@ -7,7 +7,7 @@ setInterval(function() {
 	console.log(" *** Messages passed around: " + messageCount);
 }, 3000)
 
-for(var i=0; i<2000; i++) {
+for(var i=0; i<5000; i++) {
 setTimeout(function(t) {	
 	var ws = new WebSocket('ws://razvanpat.info.tm:8001');
 	ws.name = 'Drone' + t;
@@ -17,7 +17,7 @@ setTimeout(function(t) {
 		setTimeout(function() {
 			//console.log(that.name + ' closing');
 			that.close();
-		}, 80000);
+		}, 20000);
 	});
 
 	ws.on('message', function(data, flags) {
@@ -63,7 +63,7 @@ setTimeout(function(t) {
 	ws.on('error', function(err) {
 		console.log('Error for ' + this.name, err);
 	});
-}, 10*i, i);
+}, 1*i, i);
 }
 
 
