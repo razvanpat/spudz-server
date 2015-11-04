@@ -27,7 +27,15 @@ Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker, Disc
 	    	reason: reason
 	    });
 	    //console.log("Connection closed")
-	  })
+	  });
+
+	  conn.on("error", function(errorObj) {
+	  	var player = 'unknown';
+	  	if(conn.spudzData != undefined) {
+	  		player = conn.spudzData.player
+	  	}
+	  	console.log('ERROR for player ' + player, errorObj);
+	  });
 
 	}).listen(8001)
 

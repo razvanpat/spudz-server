@@ -48,6 +48,7 @@
       document.getElementById('pcount').innerHTML = msg.playerCount;
       document.getElementById('mmcount').innerHTML = msg.matchmaked;
       document.getElementById('mqsize').innerHTML = msg.matchmakingQueue.length;
+      document.getElementById('msec').innerHTML = msg.moveCounter;
 
       var i;
       var playersOpt = '';
@@ -136,6 +137,14 @@
       </td>
     </tr> 
       
+    <tr>
+      <th style="padding-right: 10px;">
+        Moves/second
+      </th>
+      <td id='msec'>
+      0
+      </td>
+    </tr> 
 
   </table>
 

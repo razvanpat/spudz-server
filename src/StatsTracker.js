@@ -3,6 +3,7 @@ var Autowire = require('autowire');
 Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 	var activeConnections = [];
 	var monitoringConnections = [];
+	var moveCounter = 0;
 
 	function isMonitoringConnection(name) {
 		return name.indexOf('$monitoring') === 0;
@@ -33,16 +34,20 @@ Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 			players: players,
 			playerCount: players.length,
 			matchmaked: mm,
-			matchmakingQueue: Matchmaker.getMatchmakingQueue()
+			matchmakingQueue: Matchmaker.getMatchmakingQueue(),
+			moveCounter: moveCounter
 		};
 
 		Utils.broadcast(monitoringConnections, msg);
+
+		moveCounter = 0;
 	}
 
 	var StatsTracker = function() {
 		Dispatcher.register('new_connection', this, this.onNewConnection);
 		Dispatcher.register('connection_closed', this, this.onDisconnect);
 		Dispatcher.register('register_name', this, this.onPlayerName);
+		Dispatcher.register('move', this, this.incrementMoveCounter);
 
 		setInterval(function() {
 			updateStats();
@@ -64,6 +69,10 @@ Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 			});
 		}
 	};
+
+	StatsTracker.prototype.incrementMoveCounter = function() {
+		moveCounter ++;
+	}
 
 	StatsTracker.prototype.isPlayerNameAvailable = function(name) {
 		var players = getPlayers();
