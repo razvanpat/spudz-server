@@ -12,10 +12,10 @@ setTimeout(function(t) {
 	var ws = new WebSocket('ws://razvanpat.info.tm:8001');
 	ws.name = 'Drone' + t;
 	ws.on('open', function() {
-		console.log(this.name + ' connected');
+		//console.log(this.name + ' connected');
 		var that = this;
 		setTimeout(function() {
-			console.log(that.name + ' closing');
+			//console.log(that.name + ' closing');
 			that.close();
 		}, 80000);
 	});
@@ -57,7 +57,7 @@ setTimeout(function(t) {
   });
 
   ws.on('close', function() {
-	  console.log(this.name + ' disconnected');
+	  //console.log(this.name + ' disconnected');
 	});
 
 	ws.on('error', function(err) {
