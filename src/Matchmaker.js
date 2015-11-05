@@ -3,24 +3,6 @@ var Autowire = require('autowire');
 Autowire(function(_, Dispatcher, Utils) {
 	var waiting = [];
 
-	function matchmake(conn1, conn2) {
-
-		conn1.spudzData.opponent = conn2;
-		conn2.spudzData.opponent = conn1;
-
-		var first = Math.random()<.5;
-
-		conn1.sendEvent('match_found', {
-			opponentId: conn2.spudzData.player,
-			firstPlayer: first
-		});
-
-		conn2.sendEvent('match_found', {
-			opponentId: conn1.spudzData.player,
-			firstPlayer: !first
-		});
-	}
-
 	function playerAlreadyInQueue(conn) {
 		return undefined !== _.find(waiting, function(elem) {
 			return elem.spudzData.player === conn.spudzData.player;
@@ -51,7 +33,7 @@ Autowire(function(_, Dispatcher, Utils) {
 		}
 
 		if(waiting.length > 0) {
-			matchmake(waiting[0], conn);
+			Utils.matchmake(waiting[0], conn);
 			waiting.shift();
 		} else {
 			conn.sendEvent('searching_for_match');

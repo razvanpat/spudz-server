@@ -18,12 +18,12 @@ describe('Dispatcher', function() {
 		var listener;
 		beforeEach(function() {
 			listener = new DummyListener();
-			Dispatcher.clear();
+			Dispatcher.clear('testEvt');
 		});
 
 		it('can clear all listeners', function() {
 			Dispatcher.register('testEvt', listener, listener.onCommand);
-			Dispatcher.clear();
+			Dispatcher.clear('testEvt');
 
 			expect(Dispatcher.getListeners()['testEvt']).to.not.exist;
 		});

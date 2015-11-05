@@ -39,6 +39,17 @@ Connection will be made by MEAN stack and passed along to the game
 >> "searching_match"
 
 
+*********** Tournaments ************
+
+create_tournament
+tournament_already_started
+tournament_sign_up
+tournament_signed_up
+tournament_ready
+error : not signed up
+match_found
+waiting_for_opponent
+
 *********** Game client ************
 
 
