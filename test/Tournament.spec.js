@@ -8,8 +8,8 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 
 	var lastSentEventName;
 	var lastSentEventParam;
-	var eventQueue = [];
 	var playerThatReceivedLastMsg;
+	var eventQueue = [];
 
 	function clearTournamentState() {
 		Tournament.currentRound = {};
@@ -35,7 +35,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				player: player
 			});
 			if(connection.spudzData) {
-				playerThatReceivedLastMsg = connection.spudzData.player;
+				playerThatReceivedLastMsg = player;
 			}
 		}
 		return connection;
@@ -55,84 +55,23 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		};
 	}
 
-	var p1_conn = createConnection();
-	p1_conn.spudzData.player = 'p1';
-	
-	var p2_conn = createConnection();
-	p2_conn.spudzData.player = 'p2';
-
-	var p3_conn = createConnection();
-	p3_conn.spudzData.player = 'p3';
-
-	var p4_conn = createConnection();
-	p4_conn.spudzData.player = 'p4';
+	//************** specs *******************
 
 
-	function broadcast_p1(evtName, obj, conn) {
-		broadcast(evtName, obj, p1_conn);	
-	}
+	describe('Tournament', function() {
+		it('is set up with a start time', function() {
+			broadcast('configure_tournament', {
+				startTime: 500;
+			};
 
-	function broadcast_p2(evtName, obj, conn) {
-		broadcast(evtName, obj, p2_conn);	
-	}
-
-	function broadcast_p3(evtName, obj, conn) {
-		broadcast(evtName, obj, p3_conn);	
-	}
-
-	function broadcast_p4(evtName, obj, conn) {
-		broadcast(evtName, obj, p4_conn);	
-	}
-
-	function andSignedUp_p1() {
-		Tournament.currentRound.playerList.push(
-			{
-				player: p1_conn.spudzData.player,
-				connection: p1_conn
-			});
-	}
-
-	function andSignedUp_p2() {
-		Tournament.currentRound.playerList.push(
-			{
-				player: p2_conn.spudzData.player,
-				connection: p2_conn
-			});
-	}
-
-	function andSignedUp_p3() {
-		Tournament.currentRound.playerList.push(
-			{
-				player: p3_conn.spudzData.player,
-				connection: p3_conn
-			});
-	}
-
-	function andSignedUp_p4() {
-		Tournament.currentRound.playerList.push(
-			{
-				player: p4_conn.spudzData.player,
-				connection: p4_conn
-			});
-	}
-
-
-	function withStartedTournament() {
-		clearTournamentState();
-		setCurrentTime(1000);
-		broadcast('create_tournament', {
-			startTime: 500,
-			readyUpLimit: 100,
-			maxPlayers: 20
+			expect(Tournament.startTime).to.equal(500);
+			expect(Tournament.state).to.equal('configured');
 		});
-	}
 
-	function withFutureTournament() {
-		clearTournamentState();
-		setCurrentTime(0);
-		broadcast('create_tournament', {
-			startTime: 500,
-			readyUpLimit: 100,
-			maxPlayers: 20
-		});
-	}
+		xit('accepts player sign ups');
+		xit('on start time it randomly creates matches with signed up players');
+		xit('monitors match ends and creates a new round of matches when every match has ended');
+		xit('reshuffles players on every round');
+		xit('moves forward to next round any player without a match');
+		xit('declares a winner when only one player is left');
+	});

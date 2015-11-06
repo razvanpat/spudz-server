@@ -1,0 +1,13 @@
+Tournament
+	states: none, configured, in_progress, end
+
+	is singleton
+
+	properties
+		- matches
+		- startTime
+
+	none <- configure_tournament evt -> configured
+	configured <- startTime is reached -> in_progress
+	in_progress <- only one player remains -> end
+
