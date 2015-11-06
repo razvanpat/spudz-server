@@ -61,8 +61,8 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 	describe('Tournament', function() {
 		it('is set up with a start time', function() {
 			broadcast('configure_tournament', {
-				startTime: 500;
-			};
+				startTime: 500
+			});
 
 			expect(Tournament.startTime).to.equal(500);
 			expect(Tournament.state).to.equal('configured');
@@ -75,3 +75,4 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		xit('moves forward to next round any player without a match');
 		xit('declares a winner when only one player is left');
 	});
+});
