@@ -115,18 +115,34 @@ Autowire(function(_, Dispatcher, Utils) {
 			this.currentRound.roundStartTime = this.currentRound.startTime;
 		}
 
-		var allFinished = _.reduce(this.currentRound, function(result, elem) {
-			return (elem.matchWin != undefined) && result;
+		var allFinished = _.reduce(this.currentRound.playerList, function(result, elem) {
+			if(elem.matchWin === undefined) return false
+			return result;
 		}, true);
 
 		if(allFinished) {
 			this.previousRounds.push(this.currentRound);
-			console.log('init')
 		
 			this.initRound(_.last(this.previousRounds));
 		}
 
+		if(this.currentRound.roundStartTime !== undefined) {
+			var readyUpTime = this.currentRound.roundStartTime + this.currentRound.readyUpLimit;
+			if(previousVerifyTime < readyUpTime && Utils.getTime() > readyUpTime) {
+				this.disqualifyPlayersNotReady();
+			}
+		} 
+
 		previousVerifyTime = Utils.getTime();
+	};
+
+	Tournament.prototype.disqualifyPlayersNotReady = function() {
+		var that = this;
+		_.each(this.currentRound.playerList, function(elem) {
+			if(!elem.connection || !elem.connection.ready) {
+				that.setMatchWin(elem.opponent);
+			}
+		});
 	};
 
 	Tournament.prototype.setMatchWin = function(playerName) {

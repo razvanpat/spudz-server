@@ -320,11 +320,13 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		describe('verify_state', function() {
 			it('sets startAllowed to true when the start time is reached', function() {
 				withFutureTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
 
 				broadcast('verify_state', {});
 				expect(Tournament.currentRound.startAllowed).to.be.false;
 
-				setCurrentTime(1000);
+				setCurrentTime(550);
 
 				broadcast('verify_state', {});
 				expect(Tournament.currentRound.startAllowed).to.be.true;
@@ -332,8 +334,10 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 
 			it('sets the round start when the tournament start is reached', function() {
 				withFutureTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
 				broadcast('verify_state', {}); //resets the previousVerifyTime to 0
-				setCurrentTime(1000);
+				setCurrentTime(550);
 				
 				broadcast('verify_state', {});
 				
@@ -357,7 +361,28 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				expect(Tournament.previousRounds.indexOf(round)).to.be.greaterThan(-1);
 			});
 
-			xit('disqualifies players who did not ready up in time');
+			it('disqualifies players who did not ready up in time', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+				Tournament.currentRound.roundStartTime = 500;
+				broadcast_p1('tournament_ready', {});
+				broadcast_p2('tournament_ready', {});
+				setCurrentTime(550);
+				broadcast('verify_state', {});
+				broadcast_p1('tournament_ready', {});
+
+				setCurrentTime(650)
+				broadcast('verify_state', {});
+
+				expect(Tournament.getPlayer('p1').matchWin).to.be.true;
+				expect(Tournament.getPlayer('p2').matchWin).to.be.false;
+
+
+			});
+			
 			xit('saves the tournament state to db');
 		});
 	});
