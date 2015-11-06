@@ -101,13 +101,36 @@ Autowire(function(_, Dispatcher, Utils) {
 	};
 
 	Tournament.prototype.onConnectionClosed = function(arg) {
-		this.currentRound.winners.push(arg.connection.spudzData.opponent);
-		this.currentRound.playerList = _.reject(this.currentRound.playerList, function(elem) {
-			return elem === arg.connection.spudzData.opponent ||
-					elem === arg.connection;
-		}); 
-		this.currentRound.playersOut.push(arg.connection.spudzData.player);
+		this.disqualifyPlayer(arg.connection.spudzData.player);
 	};
+
+	Tournament.prototype.disqualifyPlayer = function(playerName) {
+		var player = this.getPlayer(playerName);
+		this.currentRound.winners.push(player.opponent);
+		this.currentRound.playersOut.push(playerName);
+
+		this.setMatchWin(player.opponent);
+	};
+
+	Tournament.prototype.setupOpponents = function() {
+		var playerCount = this.currentRound.playerList.length
+		for(var i=0; i<playerCount; i+=2) {
+			if(i < this.currentRound.playerList.length - 1) {
+				var pl1 = this.currentRound.playerList[i];
+				var pl2 = this.currentRound.playerList[i+1];
+
+				pl1.opponent = pl2.player;
+				pl2.opponent = pl1.player;
+				pl1.connection.spudzData.opponent = pl2.connection;
+				pl2.connection.spudzData.opponent = pl1.connection;
+			}
+		}
+		if(playerCount % 2 == 1) {
+			this.currentRound.playerList[playerCount-1].matchWin = true;
+		}
+
+		Utils.shuffleArray(this.currentRound.playerList);
+	}
 
 	Tournament.prototype.onVerifyState = function(arg) {
 		if(previousVerifyTime < this.currentRound.startTime && this.isTournamentStarted()) {
@@ -123,7 +146,21 @@ Autowire(function(_, Dispatcher, Utils) {
 		if(allFinished) {
 			this.previousRounds.push(this.currentRound);
 		
-			this.initRound(_.last(this.previousRounds));
+			var lastRound = _.last(this.previousRounds);
+
+			this.initRound(lastRound);
+
+			var that = this;
+			_.each(lastRound.playerList, function(elem) {
+				if(elem.matchWin === true) {
+					that.currentRound.playerList.push({
+						player: elem.player,
+						connection: elem.connection
+					});
+				}
+			});
+
+			this.setupOpponents();
 		}
 
 		if(this.currentRound.roundStartTime !== undefined) {

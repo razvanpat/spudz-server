@@ -25,6 +25,10 @@ Autowire(function(_) {
 		return (new Date()).getTime();
 	};
 
+	Utils.prototype.shuffleArray = function(arr) {
+		return _.shuffle(arr);
+	}
+
 	Utils.prototype.matchmake = function(conn1, conn2) {
 		conn1.spudzData.opponent = conn2;
 		conn2.spudzData.opponent = conn1;

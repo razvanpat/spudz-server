@@ -1,4 +1,4 @@
-var ws = require("nodejs-websocket")
+var ws = require("nodejs-websocket");
 var Autowire = require('autowire');
 
 
