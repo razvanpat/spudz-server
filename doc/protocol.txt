@@ -41,6 +41,10 @@ Connection will be made by MEAN stack and passed along to the game
 
 *********** Game client ************
 
+>> "match_found"
+	{
+		player_starts: boolean
+	}
 
 //Select characters		
 
@@ -48,7 +52,6 @@ Connection will be made by MEAN stack and passed along to the game
 	{
 		character_id: x
 	}
-
 
 >> "opponent_character"
 	{
@@ -58,35 +61,69 @@ Connection will be made by MEAN stack and passed along to the game
 >> "start_match"
 
 
-//P1 makes a move
+//make a move
 << "move"
-		- action: ....
-		- state {
-				P1:{ 
-					position: {x,y}
-					health:z
+		{
+			destination: {x:, y:},
+			attack: abilitate
+			state 
+			{
+				player_pos: {x:, y:},
+				opponent_pos: {x:, y:},
+				player_health: int;
+				opponent_health: int;
+				player_energy: int;
+				opponent_energy: int;
+				player_cooldowns
+				{
+					ab1:
+					ab2:
+				}
+				opponent_cooldowns
+				{
+					ab1:
+					ab2:
 				}
 			}
+		}
 			
-//P2 responds to opponent move
+// receive opponents move from server
 // besides the move and param it will contain a property 'player', witht the player id making the move (useful for spectate & replay)
->> "move"
-	....
+>> {
+			destination: {x:, y:},
+			attack: abilitate
+			state 
+			{
+				player_pos: {x:, y:},
+				opponent_pos: {x:, y:},
+				player_health: int;
+				opponent_health: int;
+				player_energy: int;
+				opponent_energy: int;
+				player_cooldowns
+				{
+					ab1:
+					ab2:
+				}
+				opponent_cooldowns
+				{
+					ab1:
+					ab2:
+				}
+			}
+			player: player_id;
+		}
 
 // !!!!!!!!! TODO serverside !!!!!!!!
 << "reconciliation"
 		- state {.....}
 
-
-//P2 makes a move		
-<< "move"
-	....
-
 		
-//Win (player_id of the winner)
+//Win 
 >> "win"
-		- player_id:x
 
+//Lose 
+>> "lose"
 
 // opponent disconnected, you win
 >> "opponent_disconnected"
