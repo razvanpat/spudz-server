@@ -49,6 +49,12 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 	}
 
 
+	function setCurrentTime(time) {
+		Utils.getTime = function() {
+			return time;
+		};
+	}
+
 	var p1_conn = createConnection();
 	p1_conn.spudzData.player = 'p1';
 	
@@ -64,38 +70,40 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		broadcast(evtName, obj, p2_conn);	
 	}
 
-	function setCurrentTime(time) {
-		Utils.getTime = function() {
-			return time;
-		};
+	function andSignedUp_p1() {
+		Tournament.currentRound.playerList.push(
+			{
+				player: p1_conn.spudzData.player,
+				connection: p1_conn
+			});
+	}
+
+	function andSignedUp_p2() {
+		Tournament.currentRound.playerList.push(
+			{
+				player: p2_conn.spudzData.player,
+				connection: p2_conn
+			});
 	}
 
 	function withStartedTournament() {
 		clearTournamentState();
 		setCurrentTime(1000);
-				broadcast('create_tournament', {
-					startTime: 500,
-					readyUpLimit: 100,
-					maxPlayers: 20
-				});
+		broadcast('create_tournament', {
+			startTime: 500,
+			readyUpLimit: 100,
+			maxPlayers: 20
+		});
 	}
 
 	function withFutureTournament() {
 		clearTournamentState();
 		setCurrentTime(0);
-				broadcast('create_tournament', {
-					startTime: 500,
-					readyUpLimit: 100,
-					maxPlayers: 20
-				});
-	}
-
-	function andSignedUp_p1() {
-		Tournament.currentRound.playerList.push(p1_conn);
-	}
-
-	function andSignedUp_p2() {
-		Tournament.currentRound.playerList.push(p2_conn);
+		broadcast('create_tournament', {
+			startTime: 500,
+			readyUpLimit: 100,
+			maxPlayers: 20
+		});
 	}
 /*
 	var lastDispatchedEvent;
@@ -118,6 +126,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 			p1_conn.spudzData.player = 'p1';
 			p2_conn = createConnection();
 			p2_conn.spudzData.player = 'p2';
+			setCurrentTime(0);
 		});
 
 		describe('create_tournament', function() {
@@ -157,7 +166,8 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				withFutureTournament();
 				broadcast_p1('tournament_sign_up', {});
 
-				expect(Tournament.currentRound.playerList[0].spudzData.player).to.equal('p1');
+				expect(Tournament.currentRound.playerList[0].player).to.equal('p1');
+				expect(Tournament.currentRound.playerList[0].connection).to.equal(p1_conn);
 			});
 
 			it('responds with tournament_signed_up when successful', function() {
@@ -185,7 +195,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 
 				broadcast_p1('tournament_ready', {}, p1_conn);
 
-				expect(Tournament.currentRound.playerList[0].spudzData.ready).to.be.true;
+				expect(Tournament.currentRound.playerList[0].connection.spudzData.ready).to.be.true;
 				expect(lastSentEventName).to.equal('waiting_for_opponent');
 				
 			});
@@ -201,6 +211,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 			it('sends matchmaking found if oponent is also ready', function() {
 				withStartedTournament();
 				andSignedUp_p1();
+				andSignedUp_p2();
 				p1_conn.spudzData.opponent = p2_conn;
 				p2_conn.spudzData.opponent = p1_conn;
 				p2_conn.spudzData.ready = true;
@@ -210,6 +221,20 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				expect(eventQueue[0].name).to.equal('match_found');
 				expect(eventQueue[0].param.opponentId).to.equal('p2');
 				expect(eventQueue[0].param.firstPlayer).to.exist;
+			});
+
+			it('sets the opponent in player list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+				p2_conn.spudzData.ready = true;
+
+				broadcast_p1('tournament_ready', {});
+
+				expect(Tournament.currentRound.playerList[0].player).to.equal('p1');
+				expect(Tournament.currentRound.playerList[0].opponent).to.equal('p2');
 			});
 
 		});
@@ -290,6 +315,50 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				
 				expect(Tournament.currentRound.playersOut.indexOf('p1')).to.be.greaterThan(-1);
 			});
+		});
+
+		describe('verify_state', function() {
+			it('sets startAllowed to true when the start time is reached', function() {
+				withFutureTournament();
+
+				broadcast('verify_state', {});
+				expect(Tournament.currentRound.startAllowed).to.be.false;
+
+				setCurrentTime(1000);
+
+				broadcast('verify_state', {});
+				expect(Tournament.currentRound.startAllowed).to.be.true;
+			});
+
+			it('sets the round start when the tournament start is reached', function() {
+				withFutureTournament();
+				broadcast('verify_state', {}); //resets the previousVerifyTime to 0
+				setCurrentTime(1000);
+				
+				broadcast('verify_state', {});
+				
+				expect(Tournament.currentRound.roundStartTime).to.equal(500);
+			});
+			
+			it('creates a new round once all players finished their game', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+				broadcast_p1('tournament_ready', {});
+				broadcast_p2('tournament_ready', {});
+				Tournament.setMatchWin(p1_conn.spudzData.player);
+				var round = Tournament.currentRound;
+
+				broadcast('verify_state', {});
+
+				expect(Tournament.currentRound).to.not.equal(round);
+				expect(Tournament.previousRounds.indexOf(round)).to.be.greaterThan(-1);
+			});
+
+			xit('disqualifies players who did not ready up in time');
+			xit('saves the tournament state to db');
 		});
 	});
 
