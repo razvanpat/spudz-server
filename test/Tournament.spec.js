@@ -60,6 +60,10 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		broadcast(evtName, obj, p1_conn);	
 	}
 
+	function broadcast_p2(evtName, obj, conn) {
+		broadcast(evtName, obj, p2_conn);	
+	}
+
 	function setCurrentTime(time) {
 		Utils.getTime = function() {
 			return time;
@@ -90,6 +94,9 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		Tournament.currentRound.playerList.push(p1_conn);
 	}
 
+	function andSignedUp_p2() {
+		Tournament.currentRound.playerList.push(p2_conn);
+	}
 /*
 	var lastDispatchedEvent;
 	var lastDispatchedArg;
@@ -123,6 +130,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				expect(Tournament.currentRound.maxPlayers).to.equal(20);
 				expect(Tournament.currentRound.playerList).to.be.an('array');
 				expect(Tournament.currentRound.playersOut).to.be.an('array');
+				expect(Tournament.currentRound.winners).to.be.an('array');
 				expect(Tournament.currentRound.startAllowed).to.be.false;
 			});
 
@@ -197,7 +205,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 				p2_conn.spudzData.opponent = p1_conn;
 				p2_conn.spudzData.ready = true;
 
-				broadcast_p1('tournament_ready', {}, p1_conn);
+				broadcast_p1('tournament_ready', {});
 
 				expect(eventQueue[0].name).to.equal('match_found');
 				expect(eventQueue[0].param.opponentId).to.equal('p2');
@@ -207,12 +215,82 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		});
 
 		describe('connection_closed', function() {
-			xit('moves the opponent to the winner list', function() {
+			it('moves the opponent to the winner list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
 
+				broadcast_p1('connection_closed', {});
+				
+				expect(Tournament.currentRound.winners.indexOf(p2_conn)).to.be.greaterThan(-1);
+				expect(Tournament.currentRound.playerList.indexOf(p2_conn)).to.equal(-1);
 			});
 
+			it('removes the connection from player list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+
+				broadcast_p1('connection_closed', {});
+				
+				expect(Tournament.currentRound.playerList.indexOf(p1_conn)).to.equal(-1);
+			});
+
+			it('adds the player id to the players out list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+
+				broadcast_p1('connection_closed', {});
+				
+				expect(Tournament.currentRound.playersOut.indexOf('p1')).to.be.greaterThan(-1);
+			});
 		});
 
+		describe('connection_error', function() {
+			it('moves the opponent to the winner list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+
+				broadcast_p1('connection_error', {});
+				
+				expect(Tournament.currentRound.winners.indexOf(p2_conn)).to.be.greaterThan(-1);
+				expect(Tournament.currentRound.playerList.indexOf(p2_conn)).to.equal(-1);
+			});
+
+			it('removes the connection from player list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+
+				broadcast_p1('connection_error', {});
+				
+				expect(Tournament.currentRound.playerList.indexOf(p1_conn)).to.equal(-1);
+			});
+
+			it('adds the player id to the players out list', function() {
+				withStartedTournament();
+				andSignedUp_p1();
+				andSignedUp_p2();
+				p1_conn.spudzData.opponent = p2_conn;
+				p2_conn.spudzData.opponent = p1_conn;
+
+				broadcast_p1('connection_error', {});
+				
+				expect(Tournament.currentRound.playersOut.indexOf('p1')).to.be.greaterThan(-1);
+			});
+		});
 	});
 
 });

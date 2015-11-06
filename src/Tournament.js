@@ -6,6 +6,8 @@ Autowire(function(_, Dispatcher, Utils) {
 		Dispatcher.register('create_tournament', this, this.onCreateTournament);
 		Dispatcher.register('tournament_sign_up', this, this.onTournamentRegister);
 		Dispatcher.register('tournament_ready', this, this.onReady);
+		Dispatcher.register('connection_closed', this, this.onConnectionClosed);
+		Dispatcher.register('connection_error', this, this.onConnectionClosed);
 
 		//connection_closed
 		//connection_error
@@ -21,6 +23,7 @@ Autowire(function(_, Dispatcher, Utils) {
 		this.currentRound.maxPlayers = arg.param.maxPlayers;
 		this.currentRound.playerList = [];
 		this.currentRound.playersOut = [];
+		this.currentRound.winners = [];
 
 		if(this.isTournamentStarted()) {
 			this.currentRound.startAllowed = true;
@@ -58,6 +61,15 @@ Autowire(function(_, Dispatcher, Utils) {
 		} else {
 			arg.connection.sendEvent('error', {message: 'Not signed up for tournament'});
 		}
+	};
+
+	Tournament.prototype.onConnectionClosed = function(arg) {
+		this.currentRound.winners.push(arg.connection.spudzData.opponent);
+		this.currentRound.playerList = _.reject(this.currentRound.playerList, function(elem) {
+			return elem === arg.connection.spudzData.opponent ||
+					elem === arg.connection;
+		}); 
+		this.currentRound.playersOut.push(arg.connection.spudzData.player);
 	};
 
 	Tournament.autowire = {

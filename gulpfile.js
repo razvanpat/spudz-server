@@ -3,7 +3,9 @@ var mocha = require('gulp-mocha');
 var shell = require('gulp-shell');
 
 gulp.task('default', function() {
-	console.log('yeah, it works');
+	gulp.watch(['src/**/*.js', 'test/**/*.js'], function() {
+        gulp.run('test');
+    });
 });
 
 gulp.task('test', function() {
