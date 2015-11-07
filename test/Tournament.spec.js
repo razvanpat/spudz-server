@@ -251,6 +251,7 @@ Autowire(function(_, Dispatcher, Utils) {
 
 			expect(lastSentEventName).to.equal('tournament_state');
 			expect(lastSentEventParam).to.equal('configured');
-		})
+		});
+
 	});
 });

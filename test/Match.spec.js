@@ -2,7 +2,6 @@ var expect = require("chai").expect;
 var Match = require("../src/Match");
 var _ = require("underscore");
 var util = require("util");
-var Dispatcher = new (require('../src/Dispatcher'))();
 
 describe("Match", function(){
     function equal(value){
@@ -26,6 +25,16 @@ describe("Match", function(){
 
         on : _.noop
     };
+    function createPlayer(name, sendEvent, on){
+        on = on || _.noop;
+        sendEvent = sendEvent || _.noop;
+
+        return {
+            name : name,
+            sendEvent : sendEvent,
+            on : on
+        };
+    }
     function createMatchWith(pl1, pl2){
         pl1.on = pl1.on || _.noop;
         pl2.on = pl2.on || _.noop;
@@ -51,8 +60,8 @@ describe("Match", function(){
     }
 
     function moveToPlay(match){
-        match.playerCharacterSelectedEvent(match.player1);
-        match.playerCharacterSelectedEvent(match.player2);
+        match.playerCharacterSelectedEvent(match.player1, { characterId : 0});
+        match.playerCharacterSelectedEvent(match.player2, { characterId : 1});
         return match;
     }
 
@@ -72,7 +81,7 @@ describe("Match", function(){
 
         match.start();
         var match_initialized = function(i){
-            return i === 'match_initialized';
+            return i === 'match_found';
         };
 
         var match_initialized_p1 = _.find(p1e, match_initialized);
@@ -101,6 +110,20 @@ describe("Match", function(){
             match.playerCharacterSelectedEvent(player2);
             expect(match.state()).to.be.eql('play');
 
+        });
+        it('notifies the opponent of the character selection', function(){
+            var player1Events = [];
+            var player2Events = [];
+            var player1 = createPlayer('pl1', storeEvents(player1Events));
+            var player2 = createPlayer('pl2', storeEvents(player2Events));
+
+            var match = moveToCharacterSelection(createMatchWith(player1, player2));
+
+            match.playerCharacterSelectedEvent(player1, {
+                characterId : 0
+            });
+
+            expect(_.find(player2Events, equal('opponent_charater_selected'))).to.exist;
         });
         describe('_pickRandomPlayer', function(){
             it('returns either player1 or player2', function(){
@@ -273,7 +296,7 @@ describe("Match", function(){
             return action('characterSelected', player);
         };
         var playerMove = function(player, data){
-            return action('playerMove', player, {
+            return action('move', player, {
                 state : data
             });
         };

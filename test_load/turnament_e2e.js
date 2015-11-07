@@ -37,16 +37,24 @@ Autowire(function(Dispatcher,Matchmaker, Greeter, Tournament){
         send(admin, 'configure_tournament', {
             startTime : 1
         });
-        send(player1, 'tournament_sign_up');
-        send(player2, 'tournament_sign_up');
+        send(player1, 'tournament_sign_up', {
+            nickname : 'pl1'
+        });
+        send(player2, 'tournament_sign_up', {
+            nickname : 'pl2'
+        });
         return waitABit().then(function(){
             Tournament.onTournamentStart();
             send(player1, 'ready');
             send(player2, 'ready');
             return waitABit();
         }).then(function () {
-            send(player1, 'characterSelected');
-            send(player2, 'characterSelected');
+            send(player1, 'characterSelected', {
+                characterId : 0
+            });
+            send(player2, 'characterSelected',{
+                characterId : 0
+            });
             return waitABit();
         }).then(function(){
             send(player1, 'playerMove', {
