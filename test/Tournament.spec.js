@@ -189,7 +189,7 @@ Autowire(function(_, Dispatcher, Utils) {
 
 			Tournament.newStage();
 
-			expect(lastSentEventName).to.equal('tournament_advance');
+			expect(_.find(eventQueue, function(i){ return i.name ==='tournament_advance';}).name).to.equal('tournament_advance');
 		});
 
 		it('declares a winner when only one player is left', function() {
@@ -244,5 +244,13 @@ Autowire(function(_, Dispatcher, Utils) {
 
 			expect(Tournament.playersSignedUp.length).to.equal(3);
 		});
+
+		it('replies to get_tournament_state', function() {
+			withConfiguredTournament();
+			broadcast('get_tournament_state', {});
+
+			expect(lastSentEventName).to.equal('tournament_state');
+			expect(lastSentEventParam).to.equal('configured');
+		})
 	});
 });

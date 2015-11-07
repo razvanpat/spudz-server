@@ -1,0 +1,30 @@
+tournament usecases
+
+	enter tournament screen
+
+=== none state
+	see message tournament is not planned
+
+=== configured state + not registered
+	see register button
+
+=== configured state + registered
+	see tournament about to start message
+	+ disabled ready button
+
+=== in_progress state and match_initialized
+	see start your match now message
+	+ enabled ready button
+
+=== in_progress state and message contatournament_stateins you_are_out
+	see you are out of the tournament message
+
+=== in_progress state and message contains tournament_advance
+	see you advance to the next round, please wait for others to finish
+
+=== in_progress state and message contains you
+	see you won your match, next round will start shortly
+
+=== end state
+	message.winner is the tournament winner, congratulations!
+
