@@ -10,7 +10,9 @@ TStateNone.prototype.onMatchEnd = function() {};
 
 var TStateConfigured = function() {};
 TStateConfigured.prototype.onConfig = function() {};
-TStateConfigured.prototype.onSignUp = function() {};
+TStateConfigured.prototype.onSignUp = function(arg) {
+	this.tournament.playersSignedUp.push(arg.connection);
+};
 TStateConfigured.prototype.onMatchEnd = function() {};
 
 var TStateInProgress = function() {};
@@ -30,6 +32,8 @@ Autowire(function(_, Dispatcher, Utils) {
 
 	var Tournament = function() {
 		this.changeState(new TStateNone());
+		this.playersSignedUp = [];
+		this.matches = [];
 
 		Dispatcher.register('configure_tournament', this, this.onConfig);
 		Dispatcher.register('tournament_sign_up', this, this.onSignUp);
@@ -51,6 +55,17 @@ Autowire(function(_, Dispatcher, Utils) {
 
 	Tournament.prototype.onMatchEnd = function(arg) {
 		this.state.onMatchEnd(arg);
+	};
+
+	Tournament.prototype.newRound = function() {
+		
+	}
+
+	Tournament.prototype.onTournamentStart = function() {
+		for(var i=0; i<this.playersSignedUp.length-1; i+=2) {
+			var m = new Match(this.playersSignedUp[i], this.playersSignedUp[i+1]);
+			this.matches.push(m);
+		}
 	};
 
 	Tournament.autowire = {
