@@ -47,7 +47,8 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 
 		Dispatcher.register('configure_tournament', this, this.onConfig);
 		Dispatcher.register('tournament_sign_up', this, this.onSignUp);
-		Dispatcher.register('match_end', this, this.onMatchEnd)
+		Dispatcher.register('match_end', this, this.onMatchEnd);
+		Dispatcher.register('tournament_start', this, this.onTournamentStart);
 	};
 
 	Tournament.prototype.changeState = function(state) {
@@ -94,7 +95,13 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 
 	Tournament.prototype.newStage = function() {
 		var playerList = _.pluck(this.matches, 'winner');
-		this.buildMatches(playerList);
+		if(this.unmatched === undefined && playerList.length === 1) {
+			this.tournamentWinner = playerList[0];
+			this.changeState(new TStateEnd());
+			this.tournamentWinner.sendEvent('tournament_win');
+		} else {
+			this.buildMatches(playerList);
+		}
 	}
 
 	Tournament.prototype.onTournamentStart = function() {		

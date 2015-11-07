@@ -217,7 +217,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			Tournament.matches[0].winner = Tournament.playersSignedUp[4];
 			broadcast('match_end', Tournament.matches[0]);
 			
-			expect(lastSentEventName).to.equal('tournament_advance');
+			expect(lastSentEventName).to.equal('tournament_win');
 		});
 		
 		it('reshuffles players on every round', function() {
@@ -229,6 +229,19 @@ Autowire(function(_, Dispatcher, Utils) {
 			Tournament.newStage();
 			
 			expect(playerShuffleCalled).to.be.true;
+		});
+
+		it('moves to in progress state on tournament_start', function() {
+			withConfiguredTournament();
+			signUpPlayer('p1');
+			signUpPlayer('p2');
+			signUpPlayer('p3');
+
+			broadcast('tournament_start', {});
+
+			signUpPlayer('p4');
+
+			expect(Tournament.playersSignedUp.length).to.equal(3);
 		});
 	});
 });
