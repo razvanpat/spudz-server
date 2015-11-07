@@ -1,0 +1,23 @@
+
+The "Match"
+    dependencies:
+        - connectionPl1, connectionPl2
+
+    properties:
+        rounds {
+            pl1 : int,
+            pl2 : int
+        },
+        currentPlayer : player - send event for 'your_move' on player switch
+        winner
+    is a state machine:
+        state: readyUp, characterSelection, play, end
+        events for all states - name + current match
+
+    readyUp <- ready P1, readP2 -> characterSelection
+    readyUp <- readyTimeout -> end
+
+    characterSelection <- char p1, char p2 -> play
+
+    play <- rounds.pl1 === 2 || rounds.pl2 === 2 -> end
+    play <- any disconnect -> end other player wins
