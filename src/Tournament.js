@@ -2,7 +2,7 @@ var Autowire = require('autowire');
 
 Autowire(function(_, Dispatcher, Match, Utils) {
 	
-	var TStateNone = function() {};
+	var TStateNone = function() {this.name = 'none';};
 	TStateNone.prototype.onConfig = function(arg) {
 		this.tournament.startTime = arg.param.startTime;
 		this.tournament.changeState(new TStateConfigured());
@@ -10,14 +10,14 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 	TStateNone.prototype.onSignUp = function() {};
 	TStateNone.prototype.onMatchEnd = function() {};
 
-	var TStateConfigured = function() {};
+	var TStateConfigured = function() {this.name = 'configured';};
 	TStateConfigured.prototype.onConfig = function() {};
 	TStateConfigured.prototype.onSignUp = function(arg) {
 		this.tournament.playersSignedUp.push(arg.connection);
 	};
 	TStateConfigured.prototype.onMatchEnd = function() {};
 
-	var TStateInProgress = function() {};
+	var TStateInProgress = function() {this.name = 'in_progress'};
 	TStateInProgress.prototype.onConfig = function() {};
 	TStateInProgress.prototype.onSignUp = function() {};
 	TStateInProgress.prototype.onMatchEnd = function(arg) {
@@ -30,7 +30,7 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 		}
 	};
 
-	var TStateEnd = function() {};
+	var TStateEnd = function() {this.name = 'end'};
 	TStateEnd.prototype.onConfig = function() {};
 	TStateEnd.prototype.onSignUp = function() {};
 	TStateEnd.prototype.onMatchEnd = function() {};
@@ -49,6 +49,7 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 		Dispatcher.register('tournament_sign_up', this, this.onSignUp);
 		Dispatcher.register('match_end', this, this.onMatchEnd);
 		Dispatcher.register('tournament_start', this, this.onTournamentStart);
+		Dispatcher.register('get_tournament_state', this, this.onGetTournamentState);
 	};
 
 	Tournament.prototype.changeState = function(state) {
@@ -66,6 +67,10 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 
 	Tournament.prototype.onMatchEnd = function(arg) {
 		this.state.onMatchEnd(arg);
+	};
+
+	Tournament.prototype.onGetTournamentState = function(arg) {
+		arg.connection.sendEvent('tournament_state', this.state.name);
 	};
 
 	Tournament.prototype.buildMatches = function(playerList) {

@@ -243,5 +243,13 @@ Autowire(function(_, Dispatcher, Utils) {
 
 			expect(Tournament.playersSignedUp.length).to.equal(3);
 		});
+
+		it('replies to get_tournament_state', function() {
+			withConfiguredTournament();
+			broadcast('get_tournament_state', {});
+
+			expect(lastSentEventName).to.equal('tournament_state');
+			expect(lastSentEventParam).to.equal('configured');
+		})
 	});
 });
