@@ -26,6 +26,7 @@ DoubleTap.prototype.next = function(player){
 function EndState(match, winner){
     this.name = 'endMatch';
     match.winner = winner;
+    match.ended = true;
 }
 
 function PlayState(match){
