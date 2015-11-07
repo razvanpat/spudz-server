@@ -1,0 +1,30 @@
+From lobby -> click unranked
+----------------------------
+
+C -> S				find_match
+S -> C 				match_found
+								- opponentId
+								- nickname
+C -> S				player_ready
+O -> S				player_ready
+S -> C,O 			start_character_selection
+C -> S 				character_selected								-> O
+								- characterId
+O -> S 				character_selected								-> C
+								- characterId
+S -> C,O 			match_started
+S -> C 				your_move
+C -> S 				move															-> O
+C -> S 				move															-> O
+C -> S 				end_turn
+S -> O 				your_move
+
+... moves sent back and forth
+
+C -> S 				move (with opponent health 0) 		-> O
+S -> C 				win
+S -> O 				lose
+S -> C,O 			end_match
+
+-> on end_match -> go back to lobby
+
