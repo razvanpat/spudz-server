@@ -1,8 +1,15 @@
 var expect = require("chai").expect;
 var Match = require("../src/Match");
 var _ = require("underscore");
+var util = require("util");
+var Dispatcher = new (require('../src/Dispatcher'))();
 
 describe("Match", function(){
+    function equal(value){
+        return function(x){
+            return x === value;
+        };
+    }
     function storeEvents(array){
         return function(evtName){
             array.push(evtName);
@@ -10,13 +17,18 @@ describe("Match", function(){
     }
     var player1 = {
         player : 'p1',
-        sendEvent : _.noop
+        sendEvent : _.noop,
+        on : _.noop
     };
     var player2 = {
         player : 'p2',
-        sendEvent : _.noop
+        sendEvent : _.noop,
+
+        on : _.noop
     };
     function createMatchWith(pl1, pl2){
+        pl1.on = pl1.on || _.noop;
+        pl2.on = pl2.on || _.noop;
         var match = new Match(pl1,pl2);
         match._pickRandomPlayer = function(){
             return pl1;
@@ -45,9 +57,30 @@ describe("Match", function(){
     }
 
     it("start as ready", function(){
-        var match = new Match();
+        var match = new Match(player1, player2);
         match.start();
         expect(match.state()).to.be.equal('readyUp');
+    });
+    it('emits "match_initialized" to both players', function(){
+        var p1e = [];
+        var p2e = [];
+        var match = createMatchWith( {
+            sendEvent : storeEvents(p1e),
+        }, {
+            sendEvent : storeEvents(p2e),
+        });
+
+        match.start();
+        var match_initialized = function(i){
+            return i === 'match_initialized';
+        };
+
+        var match_initialized_p1 = _.find(p1e, match_initialized);
+        var match_initialized_p2 = _.find(p2e, match_initialized);
+
+        expect(match_initialized_p1).to.exist;
+
+        expect(match_initialized_p2).to.exist;
     });
     describe("when both players are ready (playerReadyEvent)", function(){
         it("it switches to 'characterSelection' state", function(){
@@ -79,15 +112,17 @@ describe("Match", function(){
             var match = _.compose(moveToPlay, moveToCharacterSelection, createMatch)();
             expect(match.currentPlayer).to.be.equal(player1);
         });
-        it("broadcasts to the current player 'your_move'", function(done){
+        it("broadcasts to the current player 'your_move'", function(){
+            var events = [];
             var pl1 = {
-                sendEvent : function(eventName){
-                    expect(eventName).to.be.eql('your_move');
-                    done();
-                }
+                sendEvent : storeEvents(events)
             }
-            var pl2 = {};
+            var pl2 = {
+                sendEvent : _.noop
+            };
             moveToPlay(moveToCharacterSelection(createMatchWith(pl1, pl2)));
+
+            expect(_.filter(events, equal('your_move')));
         });
     });
 
@@ -97,19 +132,21 @@ describe("Match", function(){
             match.endTurn(match.currentPlayer);
             expect(match.currentPlayer).to.be.equal(player2);
         });
-        it("broadcasts to the second player 'your_move'", function(done){
+        it("broadcasts to the second player 'your_move'", function(){
+            var events = [];
+            var pl2 = {
+                sendEvent : storeEvents(events)
+            }
             var pl1 = {
                 sendEvent : _.noop
             };
-            var pl2 = {
-                sendEvent : function(eventName){
-                    expect(eventName).to.be.eql('your_move');
-                    done();
-                }
-            }
+            moveToPlay(moveToCharacterSelection(createMatchWith(pl1, pl2)));
+
             var match = createMatchWith(pl1, pl2);
             _.compose(moveToPlay, moveToCharacterSelection)(match);
             match.endTurn(match.currentPlayer);
+            expect(_.filter(events, equal('your_move')));
+
         });
     });
 
@@ -136,13 +173,13 @@ describe("Match", function(){
         };
 
 
-        it("broadcasts the move to the other player (opponent_move)", function(done){
-            setupStuff(_.noop, function(evtName){
-                expect(evtName).to.be.eql('opponent_move');
-                done();
-            });
+        it("broadcasts the move to the other player (opponent_move)", function(){
+            var evts = []
+            setupStuff(_.noop,storeEvents(evts));
 
             match.playerMove(player1);
+
+            expect(_.filter(evts, equal('opponent_move'))).to.exist;
         });
         it('checks the health of both players and determines a winner of this round', function(){
             var firstPlayer = [];
@@ -304,8 +341,67 @@ describe("Match", function(){
 
             expect(match.state()).to.be.eql('endMatch');
             expect(match.winner).to.be.eql(player2);
-
         });
     });
+
+    describe('With Events', function(){
+
+        var EventEmitter = require("events");
+        var Player = function(name){
+            this.name = name;
+            EventEmitter.call(this);
+        };
+        util.inherits(Player, EventEmitter);
+        Player.prototype.sendEvent = function(eventName, eventData){
+            this.emit(eventName, eventData);
+        };
+
+        function emitEvent(event, player, eventData){
+            player.emit(event, eventData);
+        }
+
+        var playerReady = function(player){
+            return emitEvent('text', player, JSON.stringify({
+                action : 'ready',
+                params : {}
+            }));
+        }
+        var playerTimeout = function(player){
+            return emitEvent('text', player, JSON.stringify({
+                action : 'readyTimeout',
+                params : {}
+            }));
+        };
+        var match;
+        var player1, player2;
+        beforeEach(function(){
+            player1 = new Player("player1");
+            player2 = new Player("player2");
+            match = createMatchWith(player1, player2);
+        })
+
+        it('listens or stuff on the dispatcher', function(){
+            playerReady(player1);
+            playerReady(player2);
+            expect(match.state()).to.be.eql('characterSelection');
+        });
+
+        it('listens for disconnect', function(){
+            emitEvent('disconnect', player1);
+            expect(match.state()).to.be.eql('endMatch');
+        });
+        it('listens for error', function(){
+            emitEvent('error', player1, new Error("Fuck!"));
+            expect(match.state()).to.be.eql('endMatch');
+        });
+
+
+        it('listens for timeouts', function(){
+            playerReady(player1);
+            playerTimeout(player2);
+            expect(match.state()).to.be.eql('endMatch');
+        });
+
+    })
 
 });
