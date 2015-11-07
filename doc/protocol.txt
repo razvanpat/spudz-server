@@ -39,6 +39,28 @@ Connection will be made by MEAN stack and passed along to the game
 >> "searching_match"
 
 
+
+
+*********** Tournaments ************
+
+// set up a tournament (by admin connection)
+<< configure_tournament
+{
+	startTime: timestamp (long, not used currently)
+}
+
+// player signs up for tournament
+// available after configure_tournament until tournament_start
+<< tournament_sign_up
+
+
+// received when player has to skip this round
+>> tournament_advance
+
+
+
+
+
 *********** Game client ************
 
 >> "match_found"
