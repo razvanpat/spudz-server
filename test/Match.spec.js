@@ -121,6 +121,15 @@ describe("Match", function(){
             match = createMatchWith(player1, player2);
             _.compose(moveToPlay, moveToCharacterSelection)(match);
         };
+
+        var PLAYER1_WIN_ACTION = {
+            player1 : {
+                health : 10,
+            },
+            player2 : {
+                health : 0
+            }
+        };
         function storeEvents(array){
             return function(evtName){
                 array.push(evtName);
@@ -139,17 +148,7 @@ describe("Match", function(){
             var firstPlayer = [];
             var secondPlayer = [];
             setupStuff(storeEvents(firstPlayer), storeEvents(secondPlayer));
-            match.playerMove(player1, {
-                player1 : {
-                    health : 10,
-                },
-                player2 : {
-                    health : 0
-                }
-            });
-            var p1YourMove = _.find(firstPlayer, function(i){
-                return i === 'your_move';
-            });
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
             var p1Win = _.find(firstPlayer, function(i){
                 return i === 'win';
             });
@@ -159,10 +158,31 @@ describe("Match", function(){
             var p2OpponentMove = _.find(secondPlayer, function(i){
                 return i === 'opponent_move';
             });
-            expect(p1YourMove).to.exist;
             expect(p1Win).to.exist;
             expect(p2Loose).to.exist;
             expect(p2OpponentMove).to.exist;
+        });
+
+        it('keeps track of the rounds', function(){
+            setupStuff(_.noop, _.noop);
+
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
+
+            expect(match.rounds.player1).to.be.eql(1);
+            expect(match.rounds.player2).to.be.eql(0);
+        });
+        it('when a player wins 2 rounds he wins the match (end_match)', function(){
+            var pl1Events = [],
+                pl2Events = [];
+            setupStuff(storeEvents(pl1Events), storeEvents(pl2Events));
+
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
+            function end_match(i){
+                return i === 'end_match';
+            }
+            var end_match_pl1 = _.find(pl1Events, end_match);
+            expect(end_match_pl1).to.exist;
         });
     });
 
