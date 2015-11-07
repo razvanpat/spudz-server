@@ -1,0 +1,6 @@
+    SEND         ->      RECEIVE
+
+__new_connection -> {'name' : 'welcome'}
+
+{'name' : 'find-match'} -> {'name' : 'found-match', 'match' : { nickname : 'SexyIon1989'}}
+                        || {'name' : 'searching-for-match'}

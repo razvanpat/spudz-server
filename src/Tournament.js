@@ -1,7 +1,7 @@
 var Autowire = require('autowire');
 
 Autowire(function(_, Dispatcher, Match, Utils) {
-	
+
 	var TStateNone = function() {};
 	TStateNone.prototype.onConfig = function(arg) {
 		this.tournament.startTime = arg.param.startTime;
@@ -34,7 +34,7 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 	TStateEnd.prototype.onConfig = function() {};
 	TStateEnd.prototype.onSignUp = function() {};
 	TStateEnd.prototype.onMatchEnd = function() {};
-		
+
 
 
 	var previousVerifyTime = 0;
@@ -73,12 +73,14 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 		playerList = this.shufflePlayers(playerList);
 		for(var i=0; i<playerList.length-1; i+=2) {
 			var m = new Match(playerList[i], playerList[i+1]);
-			this.matches.push(m);
+            m.start();
+            this.matches.push(m);
 		}
 		if(playerList.length % 2 === 1) {
 			if(this.unmatched !== undefined) {
 				var m = new Match(_.last(playerList), this.unmatched);
-				this.matches.push(m);		
+                m.start();
+                this.matches.push(m);
 				this.unmatched = undefined;
 			} else {
 				this.unmatched = _.last(playerList);
@@ -104,7 +106,7 @@ Autowire(function(_, Dispatcher, Match, Utils) {
 		}
 	}
 
-	Tournament.prototype.onTournamentStart = function() {		
+	Tournament.prototype.onTournamentStart = function() {
 		this.buildMatches(this.playersSignedUp);
 		this.changeState(new TStateInProgress());
 	};

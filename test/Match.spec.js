@@ -259,30 +259,26 @@ describe("Match", function(){
                 sendEvent : action
             };
         }
-        function action(type, data){
+        function action(type,player,data){
             return {
-                action : type,
-                params : data
+                name : type,
+                player : player,
+                param : data
             };
         }
         var ready = function(player){
-            return action('ready', {
-                player : player
-            });
+            return action('ready',player);
         };
         var characterSelected = function(player){
-            return action('characterSelected', {
-                player : player
-            });
+            return action('characterSelected', player);
         };
         var playerMove = function(player, data){
-            return action('playerMove', {
-                player : player,
+            return action('playerMove', player, {
                 state : data
             });
         };
         var endTurn = function(player){
-            return action('endTurn');
+            return action('endTurn', player);
         };
 
         var killingMove = function(player, playerWhoGotKilled){
@@ -362,13 +358,13 @@ describe("Match", function(){
 
         var playerReady = function(player){
             return emitEvent('text', player, JSON.stringify({
-                action : 'ready',
+                name : 'ready',
                 params : {}
             }));
         }
         var playerTimeout = function(player){
             return emitEvent('text', player, JSON.stringify({
-                action : 'readyTimeout',
+                name : 'readyTimeout',
                 params : {}
             }));
         };

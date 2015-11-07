@@ -31,6 +31,8 @@ Autowire(function(Dispatcher) {
     function PlayState(match){
         this.name = 'play';
         this.match = match;
+        this.match.player1.sendEvent('match_started');
+        this.match.player2.sendEvent('match_started');
     }
     PlayState.prototype.endTurn = function(){
         this.changePlayer();
@@ -86,8 +88,9 @@ Autowire(function(Dispatcher) {
     util.inherits(CharacterSelectionState, DoubleTap);
     CharacterSelectionState.prototype.nextState = function(){
         this.match.currentPlayer = this.match._pickRandomPlayer();
+        var playState = new PlayState(this.match);
         this.match.currentPlayer.sendEvent('your_move');
-        return new PlayState(this.match);
+        return playState;
     };
 
     function ReadyUpState(match){
@@ -102,25 +105,24 @@ Autowire(function(Dispatcher) {
     function bindPlayer(player, match){
         player.on('text', function(data){
             var command = JSON.parse(data);
-            command.params = command.params || {};
-            command.params.player = player;
+            command.param = command.param || {};
+            command.player = player;
             match.handleAction(command);
         });
 
         player.on('disconnect', function(){
             match.handleAction({
-                action : 'disconnect',
-                params : {
-                    player : player
-                }
+                name : 'disconnect',
+                player : player,
+                param : {}
             });
         });
 
         player.on('error', function(error){
             match.handleAction({
-                action : 'error',
-                params : {
-                    player : player,
+                name : 'error',
+                player : player,
+                param : {
                     error : error
                 }
             });
@@ -135,9 +137,7 @@ Autowire(function(Dispatcher) {
             player1 : 0,
             player2 : 0
         };
-        bindPlayer(player1, this);
-        bindPlayer(player2, this);
-	};
+    };
 
 
     Match.prototype.state = function(){
@@ -165,6 +165,9 @@ Autowire(function(Dispatcher) {
     };
 
     Match.prototype.start = function(){
+        bindPlayer(this.player1, this);
+        bindPlayer(this.player2, this);
+
         this.player1.sendEvent('match_initialized');
         this.player2.sendEvent('match_initialized');
         this._state = new ReadyUpState(this);
@@ -184,19 +187,19 @@ Autowire(function(Dispatcher) {
     };
 
     Match.prototype.handleAction = function(data){
-        switch(data.action){
+        switch(data.name){
             case 'ready':
-                return this.playerReadyEvent(data.params.player);
+                return this.playerReadyEvent(data.player);
             case 'characterSelected':
-                return this.playerCharacterSelectedEvent(data.params.player);
+                return this.playerCharacterSelectedEvent(data.player);
             case 'endTurn' :
                 return this.endTurn();
             case 'playerMove':
-                return this.playerMove(data.params.player, data.params.state);
+                return this.playerMove(data.player, data.param.state);
             case 'readyTimeout':
             case 'disconnect':
             case 'error':
-                return this.readyTimeout(data.params.player);
+                return this.readyTimeout(data.player);
         }
     };
 
