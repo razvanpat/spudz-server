@@ -1,27 +1,32 @@
 var Autowire = require('autowire');
+var util = require('util');
 
 Autowire(function(Dispatcher) {
 
-    function DoubleTapState(name, match, nextState, action){
-        action = action || function(){};
-        var firstTap;
-        var secondTap;
-        var player1 = match.player1;
-        var player2 = match.player2;
-        return {
-            name : name,
-            next : function(player){
-                firstTap = firstTap || player1 === player;
-                secondTap = secondTap || player2 === player;
-                if(firstTap && secondTap){
-                    action(match);
-                    return nextState;
-                }
-                return this;
-            }
-        };
+    function DoubleTap(name, match){
+        this.match = match;
+        this.name = name;
+        this._firstTap = null;
+        this._secondTap = null;
     }
+    DoubleTap.prototype.next = function(player){
+        var player1 = this.match.player1;
+        var player2 = this.match.player2;
 
+        this._firstTap = this._firstTap || player1 === player;
+        this._secondTap = this._secondTap || player2 === player;
+
+        if(this._firstTap &&  this._secondTap){
+            var next = this.nextState.apply(this, arguments);
+            return next;
+        }
+        return this;
+    };
+
+    function EndState(match, winner){
+        this.name = 'endMatch';
+        match.winner = winner;
+    }
 
     function PlayState(match){
         this.name = 'play';
@@ -29,9 +34,10 @@ Autowire(function(Dispatcher) {
     }
     PlayState.prototype.endTurn = function(){
         this.changePlayer();
+        return this;
     };
     PlayState.prototype.playerMove = function(player, params){
-        this.determineOtherPlayer(player).sendEvent('opponent_move', params);
+        this.match._determineOtherPlayer(player).sendEvent('opponent_move', params);
         if(!params){
             return this;
         }
@@ -48,12 +54,12 @@ Autowire(function(Dispatcher) {
         if(this.match.rounds.player1 >= 2){
             this.match.player1.sendEvent('end_match');
             this.match.player2.sendEvent('end_match');
-            return this.nextState;
+            return new EndState(this.match, this.match.player1);
         }
         if(this.match.rounds.player2 >= 2){
             this.match.player1.sendEvent('end_match');
             this.match.player2.sendEvent('end_match');
-            return this.nextState;
+            return new EndState(this.match, this.match.player2);
         }
         return this;
     }
@@ -67,20 +73,35 @@ Autowire(function(Dispatcher) {
     PlayState.prototype.isPlayerAlive = function(player){
         return player.health > 0;
     };
-    PlayState.prototype.determineOtherPlayer = function(player){
-        if(player === this.match.player1){
-            return this.match.player2;
-        }
-        if(player === this.match.player2){
-            return this.match.player1;
-        }
-        throw new Error("just another day for you and me in paradise");
-    };
 
     PlayState.prototype.changePlayer = function(){
-        this.match.currentPlayer = this.determineOtherPlayer(this.match.currentPlayer);
+        this.match.currentPlayer = this.match._determineOtherPlayer(this.match.currentPlayer);
         this.match.currentPlayer.sendEvent('your_move');
     };
+
+
+    function CharacterSelectionState(match){
+        DoubleTap.call(this, 'characterSelection', match);
+    }
+    util.inherits(CharacterSelectionState, DoubleTap);
+    CharacterSelectionState.prototype.nextState = function(){
+        this.match.currentPlayer = this.match._pickRandomPlayer();
+        this.match.currentPlayer.sendEvent('your_move');
+        return new PlayState(this.match);
+    };
+
+    function ReadyUpState(match){
+        DoubleTap.call(this, 'readyUp', match);
+    }
+    util.inherits(ReadyUpState, DoubleTap);
+    ReadyUpState.prototype.nextState = function(){
+        return new CharacterSelectionState(this.match);
+    };
+    ReadyUpState.prototype.readyTimeout = function(player){
+        var otherPlayer = this.match._determineOtherPlayer(player);
+        return new EndState(this.match, otherPlayer);
+    };
+
 
     var Match = function(player1, player2) {
         this._state = null;
@@ -98,34 +119,53 @@ Autowire(function(Dispatcher) {
         return this._state.name;
     };
 
-    Match.prototype.playerReadyEvent = function(player){
-        this._state = this._state.next(player);
+    Match.prototype.playerReadyEvent = function(player, params){
+        this._state = this._state.next(player, params);
     };
 
-    Match.prototype.playerCharacterSelectedEvent = function(player){
-        this._state = this._state.next(player);
+    Match.prototype.playerCharacterSelectedEvent = function(player, params){
+        this._state = this._state.next(player, params);
     };
-    Match.prototype.endTurn = function(player){
-        this._state = this._state.endTurn(player);
+    Match.prototype.endTurn = function(player, params){
+        this._state = this._state.endTurn(player, params);
     };
 
     Match.prototype.playerMove = function(player, params){
         this._state = this._state.playerMove(player, params);
-    }
+    };
+
+    Match.prototype.readyTimeout = function(player){
+        this._state = this._state.readyTimeout(player);
+    };
 
     Match.prototype.start = function(){
-        var play = new PlayState(this);
-        var characterSelection = new DoubleTapState('characterSelection', this, play, function(match){
-            match.currentPlayer = match._pickRandomPlayer();
-            match.currentPlayer.sendEvent('your_move');
-        });
-        var readyUp = new DoubleTapState('readyUp', this, characterSelection);
-
-        this._state = readyUp;
+        this._state = new ReadyUpState(this);
     };
 
     Match.prototype._pickRandomPlayer = function(){
         return Math.random() > 0.5 ? this.player2 : this.player1;
+    };
+    Match.prototype._determineOtherPlayer = function(player){
+        if(player === this.player1){
+            return this.player2;
+        }
+        if(player === this.player2){
+            return this.player1;
+        }
+        throw new Error("just another day for you and me in paradise");
+    };
+
+    Match.prototype.handleAction = function(data){
+        switch(data.action){
+            case 'ready':
+                return this.playerReadyEvent(data.params.player);
+            case 'characterSelected':
+                return this.playerCharacterSelectedEvent(data.params.player);
+            case 'endTurn' :
+                return this.endTurn();
+            case 'playerMove':
+                return this.playerMove(data.params.player, data.params.state);
+        }
     };
 
 	Match.autowire = {

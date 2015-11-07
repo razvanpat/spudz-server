@@ -3,6 +3,11 @@ var Match = require("../src/Match");
 var _ = require("underscore");
 
 describe("Match", function(){
+    function storeEvents(array){
+        return function(evtName){
+            array.push(evtName);
+        };
+    }
     var player1 = {
         player : 'p1',
         sendEvent : _.noop
@@ -57,7 +62,6 @@ describe("Match", function(){
     describe("when both players have selected the character (playerCharacterSelectedEvent)", function(){
         it("it switches to 'play' state", function(){
             var match = moveToCharacterSelection(createMatch());
-
             match.playerCharacterSelectedEvent(player1);
             expect(match.state()).to.be.eql('characterSelection');
 
@@ -130,11 +134,7 @@ describe("Match", function(){
                 health : 0
             }
         };
-        function storeEvents(array){
-            return function(evtName){
-                array.push(evtName);
-            };
-        }
+
 
         it("broadcasts the move to the other player (opponent_move)", function(done){
             setupStuff(_.noop, function(evtName){
@@ -184,16 +184,128 @@ describe("Match", function(){
             var end_match_pl1 = _.find(pl1Events, end_match);
             expect(end_match_pl1).to.exist;
         });
+
+        it('switches to "endMatch" when a player wins', function(){
+            setupStuff(_.noop, _.noop);
+
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
+            match.playerMove(player1, PLAYER1_WIN_ACTION);
+
+            expect(match.state()).to.be.eql('endMatch');
+            expect(match.winner).to.be.equal(player1);
+        });
     });
 
     describe('when a players timeouts (readyTimeoutEvent)', function(){
-        xit("it switches to 'end' state");
-        xit("declares the remaining player as the winner");
+        it("it switches to 'end' state", function(){
+            var match = createMatch();
+            match.readyTimeout(player1);
+
+            expect(match.state()).to.be.eql('endMatch');
+            expect(match.winner).to.be.equal(player2);
+        });
     });
 
-    describe('when either player has won two rounds', function(){
-        xit("it switches to 'end' state");
-        xit("declares declares the first player to reach 2 won rounds as the winner");
+
+    describe("handleAction", function(){
+        function expectToHaveBeenCalledWith(eventList){
+            return function(event){
+                var action = _.find(eventList, function(i){
+                    return i === event;
+                });
+                expect(action).to.exist;
+            }
+        }
+        function makePlayer(name, action){
+            return {
+                id : name,
+                sendEvent : action
+            };
+        }
+        function action(type, data){
+            return {
+                action : type,
+                params : data
+            };
+        }
+        var ready = function(player){
+            return action('ready', {
+                player : player
+            });
+        };
+        var characterSelected = function(player){
+            return action('characterSelected', {
+                player : player
+            });
+        };
+        var playerMove = function(player, data){
+            return action('playerMove', {
+                player : player,
+                state : data
+            });
+        };
+        var endTurn = function(player){
+            return action('endTurn');
+        };
+
+        var killingMove = function(player, playerWhoGotKilled){
+            var data = {
+                player1: {
+                    health : 5
+                },
+                player2: {
+                    health : 5
+                }
+            };
+            data[playerWhoGotKilled].health = 0;
+            return playerMove(player,  data);
+        }
+        it("handles the action", function(){
+            var player1Events = [];
+            var player2Events = [];
+            var expectationPlayer1 = expectToHaveBeenCalledWith(player1Events);
+            var expectationPlayer2 = expectToHaveBeenCalledWith(player2Events);
+
+            var player1 = makePlayer('pl1', storeEvents(player1Events));
+            var player2 = makePlayer('pl2', storeEvents(player2Events));
+            var match = createMatchWith(player1, player2);
+
+            match.handleAction(ready(player1));
+            match.handleAction(ready(player2));
+            expect(match.state()).to.be.eql('characterSelection');
+
+            match.handleAction(characterSelected(player1));
+            match.handleAction(characterSelected(player2));
+            expect(match.state()).to.be.equal('play');
+            expectationPlayer1('your_move');
+
+            match.handleAction(playerMove(player1, {
+                player1: {
+                    health : 10
+                },
+                player2: {
+                    health : 9
+                }
+            }));
+            expectationPlayer2('opponent_move');
+            match.handleAction(endTurn(player1));
+
+            expect(match.currentPlayer).to.be.equal(player2);
+            expectationPlayer2('your_move');
+
+            match.handleAction(killingMove(player2, 'player1'));
+            expect(match.rounds.player2).to.be.eql(1);
+
+            match.handleAction(endTurn(player2));
+            expect(match.currentPlayer).to.be.equal(player1);
+
+            match.handleAction(killingMove(player2, 'player1'));
+            expect(match.rounds.player2).to.be.eql(2);
+
+            expect(match.state()).to.be.eql('endMatch');
+            expect(match.winner).to.be.eql(player2);
+
+        });
     });
 
 });
