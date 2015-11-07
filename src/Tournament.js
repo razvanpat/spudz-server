@@ -1,39 +1,49 @@
 var Autowire = require('autowire');
 
-var TStateNone = function() {};
-TStateNone.prototype.onConfig = function(arg) {
-	this.tournament.startTime = arg.param.startTime;
-	this.tournament.changeState(new TStateConfigured());
-};
-TStateNone.prototype.onSignUp = function() {};
-TStateNone.prototype.onMatchEnd = function() {};
-
-var TStateConfigured = function() {};
-TStateConfigured.prototype.onConfig = function() {};
-TStateConfigured.prototype.onSignUp = function(arg) {
-	this.tournament.playersSignedUp.push(arg.connection);
-};
-TStateConfigured.prototype.onMatchEnd = function() {};
-
-var TStateInProgress = function() {};
-TStateInProgress.prototype.onConfig = function() {};
-TStateInProgress.prototype.onSignUp = function() {};
-TStateInProgress.prototype.onMatchEnd = function() {};
-
-var TStateEnd = function() {};
-TStateEnd.prototype.onConfig = function() {};
-TStateEnd.prototype.onSignUp = function() {};
-TStateEnd.prototype.onMatchEnd = function() {};
-
-
-Autowire(function(_, Dispatcher, Utils) {
+Autowire(function(_, Dispatcher, Match, Utils) {
 	
+	var TStateNone = function() {};
+	TStateNone.prototype.onConfig = function(arg) {
+		this.tournament.startTime = arg.param.startTime;
+		this.tournament.changeState(new TStateConfigured());
+	};
+	TStateNone.prototype.onSignUp = function() {};
+	TStateNone.prototype.onMatchEnd = function() {};
+
+	var TStateConfigured = function() {};
+	TStateConfigured.prototype.onConfig = function() {};
+	TStateConfigured.prototype.onSignUp = function(arg) {
+		this.tournament.playersSignedUp.push(arg.connection);
+	};
+	TStateConfigured.prototype.onMatchEnd = function() {};
+
+	var TStateInProgress = function() {};
+	TStateInProgress.prototype.onConfig = function() {};
+	TStateInProgress.prototype.onSignUp = function() {};
+	TStateInProgress.prototype.onMatchEnd = function(arg) {
+		var allEnded = _.reduce(this.tournament.matches, function(memo, match) {
+			if(!match.ended) return false;
+			return memo;
+		}, true);
+		if(allEnded) {
+			this.tournament.newStage();
+		}
+	};
+
+	var TStateEnd = function() {};
+	TStateEnd.prototype.onConfig = function() {};
+	TStateEnd.prototype.onSignUp = function() {};
+	TStateEnd.prototype.onMatchEnd = function() {};
+		
+
+
 	var previousVerifyTime = 0;
 
 	var Tournament = function() {
 		this.changeState(new TStateNone());
 		this.playersSignedUp = [];
 		this.matches = [];
+		this.unmatched = undefined;
 
 		Dispatcher.register('configure_tournament', this, this.onConfig);
 		Dispatcher.register('tournament_sign_up', this, this.onSignUp);
@@ -57,15 +67,39 @@ Autowire(function(_, Dispatcher, Utils) {
 		this.state.onMatchEnd(arg);
 	};
 
-	Tournament.prototype.newRound = function() {
-		
-	}
-
-	Tournament.prototype.onTournamentStart = function() {
-		for(var i=0; i<this.playersSignedUp.length-1; i+=2) {
-			var m = new Match(this.playersSignedUp[i], this.playersSignedUp[i+1]);
+	Tournament.prototype.buildMatches = function(playerList) {
+		this.matches = [];
+		playerList = this.shufflePlayers(playerList);
+		for(var i=0; i<playerList.length-1; i+=2) {
+			var m = new Match(playerList[i], playerList[i+1]);
 			this.matches.push(m);
 		}
+		if(playerList.length % 2 === 1) {
+			if(this.unmatched !== undefined) {
+				var m = new Match(_.last(playerList), this.unmatched);
+				this.matches.push(m);		
+				this.unmatched = undefined;
+			} else {
+				this.unmatched = _.last(playerList);
+				this.unmatched.sendEvent('tournament_advance');
+			}
+		} else {
+			this.unmatched = undefined;
+		}
+	}
+
+	Tournament.prototype.shufflePlayers = function(playerList) {
+		return _.shuffle(playerList);
+	}
+
+	Tournament.prototype.newStage = function() {
+		var playerList = _.pluck(this.matches, 'winner');
+		this.buildMatches(playerList);
+	}
+
+	Tournament.prototype.onTournamentStart = function() {		
+		this.buildMatches(this.playersSignedUp);
+		this.changeState(new TStateInProgress());
 	};
 
 	Tournament.autowire = {
