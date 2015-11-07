@@ -41,7 +41,7 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 		return connection;
 	}
 
-	function broadcast(evtName, obj, conn) {		
+	function broadcast(evtName, obj, conn) {	
 		Dispatcher.broadcast(evtName, {
 			connection: createConnection(conn),
 			param: obj
@@ -65,7 +65,6 @@ Autowire(function(Dispatcher, Tournament, Utils) {
 			});
 
 			expect(Tournament.startTime).to.equal(500);
-			expect(Tournament.state).to.equal('configured');
 		});
 
 		xit('accepts player sign ups');

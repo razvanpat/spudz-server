@@ -1,5 +1,7 @@
 var expect = require('chai').expect;
 var Autowire = require('autowire');
+var Dispatcher = new (require('../src/Dispatcher'))();
+
 
 var DummyListener = function() {
 	this.called = false;
@@ -14,7 +16,6 @@ DummyListener.prototype.onCommand = function(arg) {
 describe('Dispatcher', function() {
 	var listener;
 		
-	Autowire(function(Dispatcher) {
 		var listener;
 		beforeEach(function() {
 			listener = new DummyListener();
@@ -41,5 +42,4 @@ describe('Dispatcher', function() {
 
 			expect(listener.argument).to.eql('special');
 		});
-	});
 });
