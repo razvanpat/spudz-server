@@ -54,6 +54,10 @@ Connection will be made by MEAN stack and passed along to the game
 << tournament_sign_up
 
 
+// starts the tournament, sign ups no longer allowed
+<< tournament_start
+
+
 // received when player has to skip this round
 >> tournament_advance
 
