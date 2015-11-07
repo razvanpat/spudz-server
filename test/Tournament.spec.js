@@ -42,7 +42,7 @@ Autowire(function(_, Dispatcher, Utils) {
 		return connection;
 	}
 
-	function broadcast(evtName, obj, conn) {	
+	function broadcast(evtName, obj, conn) {
 		Dispatcher.broadcast(evtName, {
 			connection: createConnection(conn),
 			param: obj
@@ -75,8 +75,9 @@ Autowire(function(_, Dispatcher, Utils) {
 
 	function signUpPlayer(p) {
 			broadcast('tournament_sign_up', {}, createConnection({
-				playerId: p
-			}));		
+				playerId: p,
+                on : _.noop
+			}));
 	}
 
 	//************** specs *******************
@@ -93,7 +94,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			}
 		});
 
-		it('is set up with a start time', function() {		
+		it('is set up with a start time', function() {
 			broadcast('configure_tournament', {
 				startTime: 500
 			});
@@ -122,9 +123,9 @@ Autowire(function(_, Dispatcher, Utils) {
 
 			Tournament.onTournamentStart();
 
-			expect(Tournament.matches.length).to.equal(2);			
+			expect(Tournament.matches.length).to.equal(2);
 		});
-		
+
 		it('monitors match ends and creates a new round of matches when every match has ended', function() {
 			withStartedTournament();
 			Tournament.matches[0].ended = true;
@@ -147,7 +148,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			Tournament.onTournamentStart();
 			Tournament.matches[0].ended = true;
 			Tournament.matches[0].winner = Tournament.playersSignedUp[0];
-			
+
 			broadcast('match_end', Tournament.matches[0]);
 
 			expect(Tournament.matches.length).to.equal(1);
@@ -174,7 +175,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			Tournament.matches[0].ended = true;
 			Tournament.matches[0].winner = Tournament.playersSignedUp[0];
 			broadcast('match_end', Tournament.matches[0]);
-			
+
 			expect(Tournament.matches.length).to.equal(1);
 			expect(Tournament.matches[0].player2).to.equal(Tournament.playersSignedUp[4]);
 		});
@@ -187,7 +188,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			signUpPlayer('p3');
 
 			Tournament.newStage();
-			
+
 			expect(lastSentEventName).to.equal('tournament_advance');
 		});
 
@@ -216,10 +217,10 @@ Autowire(function(_, Dispatcher, Utils) {
 			Tournament.matches[0].ended = true;
 			Tournament.matches[0].winner = Tournament.playersSignedUp[4];
 			broadcast('match_end', Tournament.matches[0]);
-			
+
 			expect(lastSentEventName).to.equal('tournament_win');
 		});
-		
+
 		it('reshuffles players on every round', function() {
 			withConfiguredTournament();
 			signUpPlayer('p1');
@@ -227,7 +228,7 @@ Autowire(function(_, Dispatcher, Utils) {
 			signUpPlayer('p3');
 
 			Tournament.newStage();
-			
+
 			expect(playerShuffleCalled).to.be.true;
 		});
 

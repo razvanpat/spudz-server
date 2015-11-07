@@ -97,12 +97,35 @@ Autowire(function(Dispatcher) {
     ReadyUpState.prototype.nextState = function(){
         return new CharacterSelectionState(this.match);
     };
-    ReadyUpState.prototype.readyTimeout = function(player){
-        var otherPlayer = this.match._determineOtherPlayer(player);
-        return new EndState(this.match, otherPlayer);
-    };
 
 
+    function bindPlayer(player, match){
+        player.on('text', function(data){
+            var command = JSON.parse(data);
+            command.params = command.params || {};
+            command.params.player = player;
+            match.handleAction(command);
+        });
+
+        player.on('disconnect', function(){
+            match.handleAction({
+                action : 'disconnect',
+                params : {
+                    player : player
+                }
+            });
+        });
+
+        player.on('error', function(error){
+            match.handleAction({
+                action : 'error',
+                params : {
+                    player : player,
+                    error : error
+                }
+            });
+        });
+    }
     var Match = function(player1, player2) {
         this._state = null;
         this.currentPlayer = null;
@@ -112,6 +135,8 @@ Autowire(function(Dispatcher) {
             player1 : 0,
             player2 : 0
         };
+        bindPlayer(player1, this);
+        bindPlayer(player2, this);
 	};
 
 
@@ -135,10 +160,13 @@ Autowire(function(Dispatcher) {
     };
 
     Match.prototype.readyTimeout = function(player){
-        this._state = this._state.readyTimeout(player);
+        var otherPlayer = this._determineOtherPlayer(player);
+        this._state = new EndState(this, otherPlayer);
     };
 
     Match.prototype.start = function(){
+        this.player1.sendEvent('match_initialized');
+        this.player2.sendEvent('match_initialized');
         this._state = new ReadyUpState(this);
     };
 
@@ -165,6 +193,10 @@ Autowire(function(Dispatcher) {
                 return this.endTurn();
             case 'playerMove':
                 return this.playerMove(data.params.player, data.params.state);
+            case 'readyTimeout':
+            case 'disconnect':
+            case 'error':
+                return this.readyTimeout(data.params.player);
         }
     };
 
