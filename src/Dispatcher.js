@@ -5,7 +5,7 @@ Autowire(function(_) {
 	var Dispatcher = function() {
 		this.listeners = {};
 	};
-	
+
 	Dispatcher.prototype.getListeners = function() {
 		return this.listeners;
 	};
@@ -13,7 +13,7 @@ Autowire(function(_) {
 	Dispatcher.prototype.clear = function() {
 		this.listeners = {};
 	}
-		
+
 	Dispatcher.prototype.register = function(eventName, listenerScope, listenerMethod) {
 		if(this.listeners[eventName] === undefined) {
 			this.listeners[eventName] = [];
@@ -25,14 +25,14 @@ Autowire(function(_) {
 		_.each(this.listeners[eventName], function(listener) {
 			var listenerScope = listener[0];
 			var listenerMethod = listener[1];
-			listenerMethod.apply(listenerScope, [argument]);
+			listenerMethod.call(listenerScope, argument);
 		});
 	};
 
 
 	Dispatcher.autowire = {
 		instantiate: true,
-		singleton: true	
+		singleton: true
 	}
 
 	module.exports = Dispatcher;
