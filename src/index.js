@@ -2,6 +2,11 @@ var ws = require("nodejs-websocket")
 var Autowire = require('autowire');
 
 
+process.on('uncaughtException', function (err) {
+  console.log('Caught exception: ' + err);
+  console.log(err.stack);
+});
+
 Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker) {
 
 	var server = ws.createServer(function (conn) {
@@ -43,8 +48,5 @@ Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker) {
 
 	}).listen(8001)
 
-	process.on('uncaughtException', function (err) {
-	  console.log('Caught exception: ' + err);
-	});
 
 });

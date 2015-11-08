@@ -1,6 +1,6 @@
 var Autowire = require('autowire');
 
-Autowire(function(_, Dispatcher, Utils, Matchmaker) {
+Autowire(function(_, Dispatcher, Utils) {
 	var activeConnections = [];
 	var monitoringConnections = [];
 	var moveCounter = 0;
@@ -34,7 +34,6 @@ Autowire(function(_, Dispatcher, Utils, Matchmaker) {
 			players: players,
 			playerCount: players.length,
 			matchmaked: mm,
-			matchmakingQueue: Matchmaker.getMatchmakingQueue(),
 			moveCounter: moveCounter
 		};
 
