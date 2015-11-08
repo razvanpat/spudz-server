@@ -10,7 +10,7 @@ Autowire(function(Dispatcher, StatsTracker) {
 		var conn = arg.connection;
 		conn.sendEvent = function(name, param, player) {
 			var evt = {
-				name: name,
+				event: name,
 				param: param
 			};
 			if(player !== undefined) {

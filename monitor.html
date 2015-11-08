@@ -28,7 +28,7 @@
   {
     writeToScreen("CONNECTED");
     doSendObj({
-      name: 'register_name',
+      event: 'register_name',
       param: '$monitoring'
     });
   }
@@ -44,7 +44,7 @@
     if(!evt.data || evt.data[0] != '{') return;
 
     var msg = JSON.parse(evt.data);
-    if(msg.name === 'monitoring_data') {
+    if(msg.event === 'monitoring_data') {
       document.getElementById('pcount').innerHTML = msg.playerCount;
       document.getElementById('mmcount').innerHTML = msg.matchmaked;
       document.getElementById('mqsize').innerHTML = msg.matchmakingQueue.length;

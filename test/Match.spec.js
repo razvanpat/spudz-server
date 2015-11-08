@@ -284,7 +284,7 @@ describe("Match", function(){
         }
         function action(type,player,data){
             return {
-                name : type,
+                event : type,
                 player : player,
                 param : data
             };
@@ -381,13 +381,13 @@ describe("Match", function(){
 
         var playerReady = function(player){
             return emitEvent('text', player, JSON.stringify({
-                name : 'ready',
+                event : 'ready',
                 params : {}
             }));
         }
         var playerTimeout = function(player){
             return emitEvent('text', player, JSON.stringify({
-                name : 'readyTimeout',
+                event : 'readyTimeout',
                 params : {}
             }));
         };

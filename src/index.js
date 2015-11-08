@@ -18,7 +18,7 @@ Autowire(function(Dispatcher, Greeter, Matchmaker, MoveRelay, StatsTracker) {
 	  conn.on("text", function (str) {
 	    var command = JSON.parse(str);
 
-	    Dispatcher.broadcast(command.name, {
+	    Dispatcher.broadcast(command.event, {
 	    	connection: conn,
 	    	param: command.param
 	    });

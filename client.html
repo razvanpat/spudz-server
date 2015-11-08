@@ -6,7 +6,7 @@
 
 <script language="javascript" type="text/javascript">
 
-  var wsUri = "ws://razvanpat.info.tm:8001/";
+  var wsUri = "ws://192.168.8.2:8001/";
   var output;
 
   function init()
@@ -28,7 +28,7 @@
   {
     writeToScreen("CONNECTED");
     doSendObj({
-      name: 'register_name',
+      event: 'register_name',
       param: document.getElementById('name').value
     });
   }
@@ -73,14 +73,14 @@
     var msg = document.getElementById('moveData').value;
     console.log(msg);
     doSendObj({
-      name: 'move',
+      event: 'move',
       param: msg
     });
   }
 
   function findMatch() {
     doSendObj({
-      name: 'find_match',
+      event: 'find_match',
       param: {}
     });
   }

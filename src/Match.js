@@ -117,7 +117,7 @@ function bindPlayer(player, match){
 
     player.on('disconnect', function(){
         match.handleAction({
-            name : 'disconnect',
+            event : 'disconnect',
             player : player,
             param : {}
         });
@@ -125,7 +125,7 @@ function bindPlayer(player, match){
 
     player.on('error', function(error){
         match.handleAction({
-            name : 'error',
+            event : 'error',
             player : player,
             param : {
                 error : error
@@ -198,7 +198,7 @@ Match.prototype._determineOtherPlayer = function(player){
 };
 
 Match.prototype.handleAction = function(data){
-    switch(data.name){
+    switch(data.event){
         case 'ready':
             return this.playerReadyEvent(data.player);
         case 'characterSelected':
