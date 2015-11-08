@@ -92,6 +92,15 @@
     });
   }
 
+  function selectCharacter(charId){
+      doSendObj({
+        event: 'character_selection',
+        param: {
+            characterId : charId
+        }
+      });
+  }
+
 
 </script>
 
@@ -109,6 +118,11 @@
   <input type="button" value="Find match" onclick="findMatch()" />
   <input type="button" value="Ready" onclick="sendReady()" />
   <input type="button" value="Send move" onclick="sendMove()" />
+
+  <input type="button" value="Select Character 0" onclick="selectCharacter(0)" />
+  <input type="button" value="Select Character 1" onclick="selectCharacter(1)" />
+  <input type="button" value="Select Character 2" onclick="selectCharacter(2)" />
+
   <input type="button" value="Disconnect" onclick="disconnect()" />
 </div>
 
