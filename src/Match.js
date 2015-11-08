@@ -85,6 +85,7 @@ PlayState.prototype.changePlayer = function(){
 
 function CharacterSelectionState(match){
     DoubleTap.call(this, 'characterSelection', match);
+
 }
 util.inherits(CharacterSelectionState, DoubleTap);
 CharacterSelectionState.prototype.onNextCheck = function(player, data){
@@ -103,7 +104,10 @@ function ReadyUpState(match){
 }
 util.inherits(ReadyUpState, DoubleTap);
 ReadyUpState.prototype.nextState = function(){
-    return new CharacterSelectionState(this.match);
+    var nextState = new CharacterSelectionState(this.match);
+    this.match.player1.sendEvent('start_character_selection');
+    this.match.player2.sendEvent('start_character_selection');
+    return nextState;
 };
 
 
@@ -199,15 +203,15 @@ Match.prototype._determineOtherPlayer = function(player){
 
 Match.prototype.handleAction = function(data){
     switch(data.event){
-        case 'ready':
+        case 'player_ready':
             return this.playerReadyEvent(data.player);
-        case 'characterSelected':
+        case 'character_selection':
             return this.playerCharacterSelectedEvent(data.player, data.param);
-        case 'endTurn' :
+        case 'end_turn' :
             return this.endTurn();
         case 'move':
             return this.playerMove(data.player, data.param.state);
-        case 'readyTimeout':
+        case 'ready_timeout':
         case 'disconnect':
         case 'error':
             return this.readyTimeout(data.player);

@@ -290,10 +290,10 @@ describe("Match", function(){
             };
         }
         var ready = function(player){
-            return action('ready',player);
+            return action('player_ready',player);
         };
         var characterSelected = function(player){
-            return action('characterSelected', player);
+            return action('character_selection', player);
         };
         var playerMove = function(player, data){
             return action('move', player, {
@@ -301,7 +301,7 @@ describe("Match", function(){
             });
         };
         var endTurn = function(player){
-            return action('endTurn', player);
+            return action('end_turn', player);
         };
 
         var killingMove = function(player, playerWhoGotKilled){
@@ -381,13 +381,13 @@ describe("Match", function(){
 
         var playerReady = function(player){
             return emitEvent('text', player, JSON.stringify({
-                event : 'ready',
+                event : 'player_ready',
                 params : {}
             }));
         }
         var playerTimeout = function(player){
             return emitEvent('text', player, JSON.stringify({
-                event : 'readyTimeout',
+                event : 'ready_timeout',
                 params : {}
             }));
         };
