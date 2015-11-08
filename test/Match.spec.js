@@ -296,9 +296,7 @@ describe("Match", function(){
             return action('character_selection', player);
         };
         var playerMove = function(player, data){
-            return action('move', player, {
-                state : data
-            });
+            return action('move', player, data);
         };
         var endTurn = function(player){
             return action('end_turn', player);
@@ -343,7 +341,14 @@ describe("Match", function(){
                     health : 9
                 }
             }));
-            expectationPlayer2('opponent_move');
+            expectationPlayer2('opponent_move', {
+                player1: {
+                    health : 10
+                },
+                player2: {
+                    health : 9
+                }
+            });
             match.handleAction(endTurn(player1));
 
             expect(match.currentPlayer).to.be.equal(player2);

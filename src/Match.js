@@ -210,7 +210,7 @@ Match.prototype.handleAction = function(data){
         case 'end_turn' :
             return this.endTurn();
         case 'move':
-            return this.playerMove(data.player, data.param.state);
+            return this.playerMove(data.player, data.param);
         case 'ready_timeout':
         case 'disconnect':
         case 'error':
